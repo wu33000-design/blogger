@@ -1,0 +1,29 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Blog',
+  description = 'A statically generated blog powered by Astro and Ghost.',
+} = Astro.props;
+
+const siteUrl = import.meta.env.SITE_URL;
+const canonical = siteUrl ? new URL(Astro.url.pathname, siteUrl).toString() : undefined;
+---
+
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
