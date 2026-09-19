@@ -1,0 +1,61 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const GHOST_URL = import.meta.env.GHOST_URL;
+const GHOST_KEY = import.meta.env.GHOST_KEY;
+
+if (!GHOST_URL || !GHOST_KEY) {
+  throw new Error('Missing GHOST_URL or GHOST_KEY build environment variable.');
+}
+
+const endpoint = new URL('/ghost/api/content/posts/', GHOST_URL);
+endpoint.searchParams.set('key', GHOST_KEY);
+endpoint.searchParams.set('fields', 'title,slug,excerpt,published_at,feature_image');
+endpoint.searchParams.set('limit', 'all');
+endpoint.searchParams.set('order', 'published_at DESC');
+
+const response = await fetch(endpoint);
+
+if (!response.ok) {
+  throw new Error(`Ghost Content API request failed: ${response.status} ${response.statusText}`);
+}
+
+const { posts = [] } = await response.json();
+---
+
+<Layout title="Blog">
+  <main>
+    <header>
+      <h1>Blog</h1>
+    </header>
+
+    <section aria-labelledby="posts-heading">
+      <h2 id="posts-heading">文章</h2>
+
+      {posts.length === 0 ? (
+        <p>目前沒有已發布文章。</p>
+      ) : (
+        <ol>
+          {posts.map((post) => (
+            <li>
+              <article>
+                {post.feature_image && (
+                  <img src={post.feature_image} alt="" loading="lazy" />
+                )}
+                <h3>
+                  <a href={`/post/${post.slug}`}>{post.title}</a>
+                </h3>
+                {post.published_at && (
+                  <time datetime={post.published_at}>
+                    {new Date(post.published_at).toLocaleDateString('zh-TW')}
+                  </time>
+                )}
+                {post.excerpt && <p>{post.excerpt}</p>}
+              </article>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  </main>
+</Layout>
