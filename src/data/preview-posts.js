@@ -1,18 +1,6 @@
-export const previewPosts = [
-  {
-    slug: 'welcome',
-    title: '內部預覽：第一篇文章',
-    excerpt: '這是尚未連接正式 Ghost CMS 前使用的預覽內容，用來確認 Astro 靜態網站的資訊架構與發布流程。',
-    published_at: '2026-09-20T00:00:00.000Z',
-    feature_image: null,
-    html: '<p>這是一個內部檢視版本。</p><p>正式部署連接 Ghost Content API 後，這裡會顯示 Ghost 編輯器輸出的文章內容。</p>'
-  },
-  {
-    slug: 'architecture-preview',
-    title: '系統架構預覽',
-    excerpt: 'Astro 在建置階段讀取 Ghost，產生完全靜態 HTML，再由 Cloudflare Pages 發布。',
-    published_at: '2026-09-19T00:00:00.000Z',
-    feature_image: null,
-    html: '<h2>目前架構</h2><p>Astro SSG → static HTML → CDN。Ghost 作為 Headless CMS，圖片預計儲存在 Cloudflare R2。</p>'
-  }
+export const previewPosts=[
+{slug:'designing-for-continuity',title:'從一次互動到長期能力：AI 工具應該如何被設計？',excerpt:'如果今天的工具配置會改變明天能看見、判斷與創造的可能性，介面設計就不能只衡量眼前效率。',published_at:'2026-09-20T00:00:00.000Z',feature_image:null,html:'<p>我們習慣用一次任務的完成速度評估工具：是否更快、是否更準、是否減少步驟。但這種衡量方式忽略了一個時間尺度。</p><h2>工具不只完成任務，也塑造下一次任務</h2><p>人在使用系統時，同時形成新的習慣、判斷方式與注意力結構。這表示設計問題不只是「誰完成了哪個功能」，也包括「誰承擔了這次參與所留下的形成性後果」。</p><blockquote>好的協作介面不只降低今天的摩擦，也保留使用者明天能夠重新判斷的空間。</blockquote><p>這個預覽頁用來測試 Ghost 長文 HTML、標題階層、引用、閱讀寬度與行動裝置排版。</p>'},
+{slug:'static-first-publishing',title:'Static-first publishing：為什麼部落格前台不需要一直在線的 CMS',excerpt:'把寫作後台與閱讀前台拆開，可以同時得到更低的攻擊面、更快的載入速度與更單純的部署模型。',published_at:'2026-09-18T00:00:00.000Z',feature_image:null,html:'<p>Headless CMS 最有價值的地方之一，是讓內容管理與內容配送成為兩個不同的問題。</p><h2>Build time 是一道清楚的邊界</h2><p>Astro 在發布時取得內容並生成 HTML。讀者造訪網站時，不需要等待資料庫或 CMS 回應。</p><p>這也使 CMS 暫時休眠時，已發布文章仍然可以正常閱讀。</p>'},
+{slug:'research-infrastructure',title:'研究基礎設施不是資料夾：從文獻到可追溯知識',excerpt:'真正可維護的研究系統，需要讓來源、轉換、判斷與輸出之間的關係保持可追溯。',published_at:'2026-09-14T00:00:00.000Z',feature_image:null,html:'<p>檔案整理只能回答「東西在哪裡」，卻不一定回答「這個結論從哪裡來」。</p><h2>從儲存轉向 provenance</h2><p>研究工作流的核心，是讓每一次摘要、分類與論證都能回到原始材料。</p>'},
+{slug:'serverless-with-boundaries',title:'Serverless 的免費不是沒有成本，而是把邊界設計清楚',excerpt:'免費額度適合小型出版，但真正需要設計的是持久狀態、建置頻率與供應商失效時的退路。',published_at:'2026-09-10T00:00:00.000Z',feature_image:null,html:'<p>Serverless 架構最容易被誤解成「不用管理伺服器」。更精確的說法是：管理責任被重新分配。</p><h2>先畫出持久狀態</h2><p>資料庫、媒體與生成後的靜態資產具有不同生命週期，因此不應綁在同一個 ephemeral container。</p>'}
 ];
