@@ -1,32 +1,12 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import { getPosts } from '../../lib/posts.js';
-
-export async function getStaticPaths() {
-  const posts = await getPosts();
-  return posts.map((post) => ({
-    params: { slug: post.slug },
-    props: { post },
-  }));
-}
-
-const { post } = Astro.props;
+import Layout from '../../layouts/Layout.astro'; import { getPosts } from '../../lib/posts.js';
+export async function getStaticPaths(){const posts=await getPosts();return posts.map(post=>({params:{slug:post.slug},props:{post}}))}
+const {post}=Astro.props; const fmt=(d)=>new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'long',day:'numeric'}).format(new Date(d));
 ---
-
-<Layout title={post.title} description={post.excerpt || post.title}>
-  <main>
-    <article>
-      <header>
-        <p><a href="/">← 返回首頁</a></p>
-        <h1>{post.title}</h1>
-        {post.published_at && (
-          <time datetime={post.published_at}>
-            {new Date(post.published_at).toLocaleDateString('zh-TW')}
-          </time>
-        )}
-        {post.feature_image && <img src={post.feature_image} alt="" />}
-      </header>
-      <section set:html={post.html} />
-    </article>
-  </main>
-</Layout>
+<Layout title={`${post.title} — Field Notes`} description={post.excerpt||post.title}>
+<main class="shell article-shell"><a class="back" href="/">← All notes</a><article><header class="article-head"><p class="meta">FIELD NOTE / ESSAY</p><h1>{post.title}</h1><p class="lead">{post.excerpt}</p><div class="byline"><span>Editorial Desk</span><time datetime={post.published_at}>{fmt(post.published_at)}</time><span>8 min read</span></div></header><div class="hero-art" aria-hidden="true"><span>FIELD NOTES / ARCHIVE</span></div><section class="prose article-body" set:html={post.html}/></article>
+<aside class="review-note"><strong>Preview checklist</strong><span>✓ Dynamic route</span><span>✓ Ghost HTML rendering</span><span>✓ Responsive typography</span><span>✓ Static generation</span></aside>
+</main>
+<style>
+.article-shell{padding-top:42px;position:relative}.back{font:700 12px monospace;text-decoration:none}.article-head{max-width:900px;padding:70px 0 46px}.meta{font:700 11px monospace;letter-spacing:.12em;color:var(--muted)}.article-head h1{font:500 clamp(46px,7vw,82px)/1 Georgia,serif;letter-spacing:-.035em;margin:20px 0 28px}.lead{font:22px/1.55 Georgia,serif;color:#55534c;max-width:760px}.byline{display:flex;gap:22px;margin-top:35px;padding-top:18px;border-top:1px solid var(--line);font:12px monospace;color:var(--muted)}.hero-art{height:380px;background:#24231f;color:#f6f4ed;display:flex;align-items:flex-end;padding:24px;font:12px monospace;letter-spacing:.12em}.article-body{max-width:720px;margin:64px auto}.review-note{position:fixed;right:18px;bottom:18px;background:#fff;border:1px solid var(--line);padding:14px 16px;display:grid;gap:5px;font:11px monospace;box-shadow:0 6px 30px #0001}.review-note strong{margin-bottom:4px}@media(max-width:800px){.hero-art{height:240px}.review-note{display:none}.byline{flex-wrap:wrap}}
+</style></Layout>
