@@ -1,12 +1,15 @@
 ---
-import Layout from '../../layouts/Layout.astro'; import { getPosts } from '../../lib/posts.js';
+import Layout from '../../layouts/Layout.astro'; import {getPosts} from '../../lib/posts.js';
 export async function getStaticPaths(){const posts=await getPosts();return posts.map(post=>({params:{slug:post.slug},props:{post}}))}
-const {post}=Astro.props; const fmt=(d)=>new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'long',day:'numeric'}).format(new Date(d));
+const {post}=Astro.props; const fmt=d=>new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'long',day:'numeric'}).format(new Date(d));
 ---
 <Layout title={`${post.title} — Field Notes`} description={post.excerpt||post.title}>
-<main class="shell article-shell"><a class="back" href="/">← All notes</a><article><header class="article-head"><p class="meta">FIELD NOTE / ESSAY</p><h1>{post.title}</h1><p class="lead">{post.excerpt}</p><div class="byline"><span>Editorial Desk</span><time datetime={post.published_at}>{fmt(post.published_at)}</time><span>8 min read</span></div></header><div class="hero-art" aria-hidden="true"><span>FIELD NOTES / ARCHIVE</span></div><section class="prose article-body" set:html={post.html}/></article>
-<aside class="review-note"><strong>Preview checklist</strong><span>✓ Dynamic route</span><span>✓ Ghost HTML rendering</span><span>✓ Responsive typography</span><span>✓ Static generation</span></aside>
+<main class="shell article"><a class="back" href="/">← Index</a>
+<header><div class="topline"><span>Essay / Field note</span><span>{fmt(post.published_at)}</span></div><h1>{post.title}</h1><div class="intro"><p>{post.excerpt}</p><span>08 MIN<br/>READ</span></div></header>
+<div class="art"><span>FIELD ※ NOTES</span><b>01</b></div>
+<section class="prose body" set:html={post.html}/>
+<nav class="next"><span>Continue exploring</span><a href="/">All notes ↗</a></nav>
 </main>
 <style>
-.article-shell{padding-top:42px;position:relative}.back{font:700 12px monospace;text-decoration:none}.article-head{max-width:900px;padding:70px 0 46px}.meta{font:700 11px monospace;letter-spacing:.12em;color:var(--muted)}.article-head h1{font:500 clamp(46px,7vw,82px)/1 Georgia,serif;letter-spacing:-.035em;margin:20px 0 28px}.lead{font:22px/1.55 Georgia,serif;color:#55534c;max-width:760px}.byline{display:flex;gap:22px;margin-top:35px;padding-top:18px;border-top:1px solid var(--line);font:12px monospace;color:var(--muted)}.hero-art{height:380px;background:#24231f;color:#f6f4ed;display:flex;align-items:flex-end;padding:24px;font:12px monospace;letter-spacing:.12em}.article-body{max-width:720px;margin:64px auto}.review-note{position:fixed;right:18px;bottom:18px;background:#fff;border:1px solid var(--line);padding:14px 16px;display:grid;gap:5px;font:11px monospace;box-shadow:0 6px 30px #0001}.review-note strong{margin-bottom:4px}@media(max-width:800px){.hero-art{height:240px}.review-note{display:none}.byline{flex-wrap:wrap}}
+.article{padding-top:24px}.back{font:11px monospace;text-transform:uppercase;text-decoration:none}.article header{padding:70px 0 45px}.topline{display:flex;justify-content:space-between;border-bottom:1px solid;padding-bottom:10px;font:11px monospace;text-transform:uppercase}.article h1{font:800 clamp(58px,10vw,150px)/.84 Arial,sans-serif;letter-spacing:-.065em;margin:35px 0;text-transform:uppercase;max-width:1400px}.intro{display:grid;grid-template-columns:1fr auto;gap:30px;align-items:end}.intro p{font:23px/1.35 Georgia,serif;max-width:720px;margin:0}.intro span{font:11px monospace}.art{height:52vw;max-height:680px;min-height:330px;background:var(--acid);border:1px solid;display:flex;align-items:flex-end;justify-content:space-between;padding:18px;font:11px monospace}.art b{font:800 clamp(80px,18vw,260px)/.7 Arial,sans-serif;letter-spacing:-.08em}.body{max-width:720px;margin:80px auto 120px}.next{border-top:1px solid;border-bottom:1px solid;padding:20px 0;display:flex;justify-content:space-between;font:11px monospace;text-transform:uppercase}.next a{text-decoration:none}@media(max-width:720px){.article header{padding-top:45px}.intro{grid-template-columns:1fr}.art{height:70vw}.body{margin:55px auto 80px}}
 </style></Layout>
