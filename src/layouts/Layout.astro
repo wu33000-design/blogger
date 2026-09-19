@@ -1,29 +1,22 @@
 ---
-interface Props {
-  title?: string;
-  description?: string;
-}
-
-const {
-  title = 'Blog',
-  description = 'A statically generated blog powered by Astro and Ghost.',
-} = Astro.props;
-
-const siteUrl = import.meta.env.SITE_URL;
-const canonical = siteUrl ? new URL(Astro.url.pathname, siteUrl).toString() : undefined;
+interface Props { title?: string; description?: string; }
+const { title='Field Notes', description='Independent notes on technology, design, and research.' }=Astro.props;
+const siteUrl=import.meta.env.SITE_URL;
+const canonical=siteUrl?new URL(Astro.url.pathname,siteUrl).toString():undefined;
 ---
-
 <!doctype html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    {canonical && <link rel="canonical" href={canonical} />}
-  </head>
-  <body>
-    <slot />
-  </body>
-</html>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width">
+<meta name="generator" content={Astro.generator}><title>{title}</title>
+<meta name="description" content={description}>{canonical&&<link rel="canonical" href={canonical}/>}
+<style is:global>
+:root{--ink:#171714;--muted:#6e6d66;--line:#d9d7cf;--paper:#f6f4ed;--white:#fff;--accent:#b9462f;--max:1180px}
+*{box-sizing:border-box}html{background:var(--paper);color:var(--ink);font-family:Arial,"Noto Sans TC",sans-serif}body{margin:0}a{color:inherit}.shell{width:min(calc(100% - 40px),var(--max));margin:auto}.site-head{border-bottom:1px solid var(--line);background:rgba(246,244,237,.96);position:sticky;top:0;z-index:5}.nav{min-height:72px;display:flex;align-items:center;gap:28px}.brand{font:700 20px Georgia,serif;text-decoration:none;letter-spacing:.02em}.nav-links{display:flex;gap:22px;margin-left:auto}.nav-links a{text-decoration:none;font-size:14px}.preview-badge{font:700 11px monospace;text-transform:uppercase;border:1px solid var(--ink);padding:6px 8px}.site-foot{border-top:1px solid var(--line);margin-top:80px;padding:28px 0 44px;color:var(--muted);font-size:13px}.footrow{display:flex;justify-content:space-between;gap:20px}.prose{font-family:Georgia,"Noto Serif TC",serif;font-size:19px;line-height:1.85}.prose h2{font-family:Arial,"Noto Sans TC",sans-serif;font-size:28px;line-height:1.25;margin-top:2em}.prose blockquote{margin:2em 0;padding-left:20px;border-left:3px solid var(--accent);color:#4f4d47}@media(max-width:700px){.shell{width:min(calc(100% - 28px),var(--max))}.nav-links{display:none}.footrow{display:block}}
+</style>
+</head>
+<body>
+<header class="site-head"><div class="shell nav"><a class="brand" href="/">Field Notes</a><nav class="nav-links" aria-label="主要導覽"><a href="/#latest">文章</a><a href="/#topics">主題</a><a href="/#about">關於</a></nav><span class="preview-badge">Internal Preview</span></div></header>
+<slot/>
+<footer class="site-foot"><div class="shell footrow"><span>Field Notes — Technology, design & research.</span><span>Astro SSG · Ghost-ready · Cloudflare</span></div></footer>
+</body></html>
