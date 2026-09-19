@@ -1,0 +1,51 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const GHOST_URL = import.meta.env.GHOST_URL;
+  const GHOST_KEY = import.meta.env.GHOST_KEY;
+
+  if (!GHOST_URL || !GHOST_KEY) {
+    throw new Error('Missing GHOST_URL or GHOST_KEY build environment variable.');
+  }
+
+  const endpoint = new URL('/ghost/api/content/posts/', GHOST_URL);
+  endpoint.searchParams.set('key', GHOST_KEY);
+  endpoint.searchParams.set('fields', 'slug,title,excerpt,published_at,feature_image,html');
+  endpoint.searchParams.set('limit', 'all');
+
+  const response = await fetch(endpoint);
+
+  if (!response.ok) {
+    throw new Error(`Ghost Content API request failed: ${response.status} ${response.statusText}`);
+  }
+
+  const { posts = [] } = await response.json();
+
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+---
+
+<Layout title={post.title} description={post.excerpt || post.title}>
+  <main>
+    <article>
+      <header>
+        <p><a href="/">← 返回首頁</a></p>
+        <h1>{post.title}</h1>
+        {post.published_at && (
+          <time datetime={post.published_at}>
+            {new Date(post.published_at).toLocaleDateString('zh-TW')}
+          </time>
+        )}
+        {post.feature_image && <img src={post.feature_image} alt="" />}
+      </header>
+
+      <section set:html={post.html} />
+    </article>
+  </main>
+</Layout>
