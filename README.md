@@ -182,3 +182,6 @@ The Astro + Cloudflare Pages + R2 portion can comfortably remain inside free tie
 A free web container with ephemeral disk is acceptable only because media is moved to R2 and the database is external. It is still hobby infrastructure: sleeping, cold starts, lack of SLA, quota changes, and provider policy changes are possible.
 
 For anything business-critical, treat the zero-cost setup as a prototype/hobby deployment rather than guaranteed production infrastructure.
+
+
+<!-- cloudflare-internal-preview-trigger: 2026-09-20 -->
