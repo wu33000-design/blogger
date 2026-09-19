@@ -1,39 +1,18 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { getPosts } from '../lib/posts.js';
-
-const posts = await getPosts();
+const posts=await getPosts(); const [featured,...rest]=posts;
+const fmt=(d)=>new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'short',day:'numeric'}).format(new Date(d));
 ---
-
-<Layout title="Blog">
-  <main>
-    <header>
-      <h1>Blog</h1>
-      <p>Internal preview</p>
-    </header>
-
-    <section aria-labelledby="posts-heading">
-      <h2 id="posts-heading">文章</h2>
-      {posts.length === 0 ? (
-        <p>目前沒有已發布文章。</p>
-      ) : (
-        <ol>
-          {posts.map((post) => (
-            <li>
-              <article>
-                {post.feature_image && <img src={post.feature_image} alt="" loading="lazy" />}
-                <h3><a href={`/post/${post.slug}`}>{post.title}</a></h3>
-                {post.published_at && (
-                  <time datetime={post.published_at}>
-                    {new Date(post.published_at).toLocaleDateString('zh-TW')}
-                  </time>
-                )}
-                {post.excerpt && <p>{post.excerpt}</p>}
-              </article>
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
-  </main>
+<Layout title="Field Notes — Technology, Design & Research">
+<main class="shell home">
+<section class="hero"><p class="kicker">Independent publication / 2026</p><h1>觀察技術如何改變<br/>我們設計、創作與思考。</h1><p class="dek">長篇分析、研究札記與實作紀錄。這個版本用來審查資訊架構、閱讀體驗與 Ghost 發布流程。</p></section>
+{featured&&<section class="featured" aria-label="精選文章"><div class="visual"><span>FEATURED / 01</span></div><article><p class="meta">{fmt(featured.published_at)} · 8 MIN READ</p><h2><a href={`/post/${featured.slug}`}>{featured.title}</a></h2><p>{featured.excerpt}</p><a class="read" href={`/post/${featured.slug}`}>閱讀文章 →</a></article></section>}
+<section id="latest" class="latest"><div class="section-head"><h2>Latest notes</h2><span>{posts.length.toString().padStart(2,'0')} ARTICLES</span></div><div class="grid">{rest.map((post,i)=><article class="card"><div class="card-no">{String(i+2).padStart(2,'0')}</div><p class="meta">{fmt(post.published_at)}</p><h3><a href={`/post/${post.slug}`}>{post.title}</a></h3><p>{post.excerpt}</p><a class="read" href={`/post/${post.slug}`}>Read →</a></article>)}</div></section>
+<section id="topics" class="topics"><div><p class="kicker">Topics</p><h2>研究不是分類，而是一組持續交叉的問題。</h2></div><div class="topic-list"><span>AI & Human Agency</span><span>Design Systems</span><span>Cloud Architecture</span><span>Research Practice</span></div></section>
+<section id="about" class="about"><p class="kicker">About this preview</p><p>目前內容是本地 mock data；版型、導覽、文章列表、動態文章路由與長文排版都是真實 Astro SSG。接上 Ghost 後，內容來源會切換，前端結構不需重做。</p></section>
+</main>
+<style>
+.home{padding-top:68px}.kicker,.meta{font:700 11px monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.hero{padding:32px 0 82px;border-bottom:1px solid var(--line)}.hero h1{font:500 clamp(46px,7vw,88px)/.98 Georgia,serif;letter-spacing:-.045em;max-width:1000px;margin:20px 0 28px}.dek{font:18px/1.6 Georgia,serif;max-width:660px;color:#4f4d47}.featured{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;padding:64px 0;border-bottom:1px solid var(--line)}.visual{min-height:390px;background:#24231f;color:#f6f4ed;padding:24px;display:flex;align-items:flex-end;font:12px monospace;letter-spacing:.1em}.featured article{align-self:center}.featured h2{font:500 44px/1.05 Georgia,serif;margin:18px 0}.featured h2 a,.card h3 a{text-decoration:none}.featured article>p:not(.meta),.card>p:not(.meta){font:17px/1.65 Georgia,serif;color:#55534c}.read{display:inline-block;margin-top:18px;font-size:13px;font-weight:700;text-decoration:none;border-bottom:1px solid}.section-head{display:flex;justify-content:space-between;align-items:end;padding:54px 0 20px;border-bottom:1px solid var(--ink)}.section-head h2{font:500 30px Georgia,serif;margin:0}.section-head span{font:11px monospace}.grid{display:grid;grid-template-columns:repeat(3,1fr)}.card{min-height:310px;padding:26px 26px 32px 0;border-bottom:1px solid var(--line);position:relative}.card+.card{border-left:1px solid var(--line);padding-left:26px}.card-no{font:42px Georgia,serif;color:#bbb8ad;margin-bottom:50px}.card h3{font:500 25px/1.15 Georgia,serif;margin:12px 0}.topics{display:grid;grid-template-columns:1fr 1fr;gap:60px;padding:80px 0;border-bottom:1px solid var(--line)}.topics h2{font:500 34px/1.15 Georgia,serif;max-width:520px}.topic-list{display:grid}.topic-list span{padding:17px 0;border-bottom:1px solid var(--line);font:18px Georgia,serif}.about{padding:70px 0;max-width:760px}.about>p:last-child{font:22px/1.6 Georgia,serif}@media(max-width:760px){.featured,.topics{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.card+.card{border-left:0;padding-left:0}.hero{padding-bottom:50px}.visual{min-height:240px}}
+</style>
 </Layout>
