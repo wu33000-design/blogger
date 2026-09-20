@@ -1,0 +1,55 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="Posts — Field Notes CMS">
+<div class="cms" id="cms" hidden>
+  <aside class="side">
+    <div class="cms-brand">FIELD NOTES</div>
+    <a class="view" href="/" target="_blank">View site ↗</a>
+    <nav><a href="/admin" class="active">Posts</a><a href="/admin/tags">Tags</a><a href="/admin/settings">Settings</a></nav>
+    <div class="side-foot"><button id="sign-out" class="btn secondary">Sign out</button></div>
+  </aside>
+  <main class="main">
+    <header class="top"><div><h1>Posts</h1><p class="muted">Your publication, in one place.</p></div><button id="new-post" class="btn">New post</button></header>
+    <div class="filters"><button data-filter="all" class="on">All</button><button data-filter="draft">Drafts</button><button data-filter="published">Published</button><input id="search" type="search" placeholder="Search posts"></div>
+    <div id="posts" class="posts"><p class="muted">Loading…</p></div>
+  </main>
+</div>
+<script>
+ import { onAuthStateChanged, signOut } from 'firebase/auth';
+ import { collection, doc, getDoc, getDocs, addDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+ import { firebaseConfigured, getFirebaseClient } from '../../lib/firebase-client.js';
+
+ const cms=document.querySelector('#cms'), list=document.querySelector('#posts'), search=document.querySelector('#search');
+ let allPosts=[], filter='all';
+ if(!firebaseConfigured){location.href='/admin/login';}
+ else{
+  const {auth,db}=getFirebaseClient();
+  onAuthStateChanged(auth,async user=>{
+   if(!user){location.href='/admin/login';return;}
+   const profile=await getDoc(doc(db,'users',user.uid));
+   if(!profile.exists()||!['admin','editor'].includes(profile.data().role)){await signOut(auth);location.href='/admin/login';return;}
+   cms.hidden=false;
+   const snap=await getDocs(query(collection(db,'posts'),orderBy('updatedAt','desc')));
+   allPosts=snap.docs.map(d=>({id:d.id,...d.data()})); render();
+  });
+  document.querySelector('#sign-out')?.addEventListener('click',async()=>{await signOut(auth);location.href='/admin/login';});
+  document.querySelector('#new-post')?.addEventListener('click',async()=>{
+   const ref=await addDoc(collection(db,'posts'),{title:'',slug:'',status:'draft',excerpt:'',content:{version:1,blocks:[]},html:'',tagIds:[],authorId:auth.currentUser.uid,featured:false,featureImage:null,featureImageAlt:null,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),publishedAt:null});
+   location.href='/admin/posts/'+ref.id;
+  });
+ }
+ document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('on',x===b));render()}));
+ search?.addEventListener('input',render);
+ function render(){
+  const term=(search?.value||'').toLowerCase();
+  const rows=allPosts.filter(p=>(filter==='all'||p.status===filter)&&String(p.title||'Untitled').toLowerCase().includes(term));
+  list.innerHTML=rows.length?rows.map(p=>`<a class="row" href="/admin/posts/${p.id}"><div><strong>${escapeHtml(p.title||'Untitled')}</strong><span>${p.status||'draft'}</span></div><time>${date(p.updatedAt)}</time></a>`).join(''):'<p class="muted">No posts yet.</p>';
+ }
+ const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+ const date=v=>v?.toDate?v.toDate().toLocaleDateString():'—';
+</script>
+<style>
+.filters{display:flex;gap:20px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:14px}.filters button{border:0;background:none;padding:5px 0;color:#888;cursor:pointer}.filters button.on{color:#111}.filters input{margin-left:auto;border:0;border-bottom:1px solid var(--line);background:transparent;padding:8px;width:220px}.posts{background:#fff}.row{display:flex;justify-content:space-between;align-items:center;padding:20px 18px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit}.row:hover{background:#fafafa}.row strong{font-size:15px;font-weight:550}.row span{display:block;color:#888;text-transform:capitalize;font-size:12px;margin-top:6px}.row time{font-size:12px;color:#888}
+</style>
+</AdminLayout>
