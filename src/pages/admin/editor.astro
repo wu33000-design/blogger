@@ -1,0 +1,68 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="Editor — Field Notes CMS">
+<div id="editor" class="editor" hidden>
+ <header class="bar"><a href="/admin">← Posts</a><div class="actions"><span id="save-state">Saved</span><button id="preview" class="quiet">Preview</button><button id="publish" class="publish">Publish</button></div></header>
+ <main class="canvas">
+  <input id="title" class="title" placeholder="Post title" aria-label="Post title">
+  <textarea id="body" class="body" placeholder="Begin writing…" aria-label="Post body"></textarea>
+ </main>
+ <button id="settings-toggle" class="settings-toggle" aria-label="Post settings">⚙</button>
+ <aside id="settings" class="settings">
+  <h2>Post settings</h2>
+  <label>URL<input id="slug"></label>
+  <label>Excerpt<textarea id="excerpt" rows="5"></textarea></label>
+  <label class="check"><input id="featured" type="checkbox"> Feature this post</label>
+  <p class="hint">Structured block editing, tags and media follow in the next implementation phase.</p>
+ </aside>
+</div>
+<div id="preview-modal" class="modal" hidden><div class="preview-card"><button id="close-preview">Close</button><article><h1 id="preview-title"></h1><div id="preview-body"></div></article></div></div>
+<script>
+ import { onAuthStateChanged, signOut } from 'firebase/auth';
+ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+ import { firebaseConfigured, getFirebaseClient } from '../../lib/firebase-client.js';
+
+ const qs=(s)=>document.querySelector(s);
+ const id=new URLSearchParams(location.search).get('id');
+ const root=qs('#editor');
+ let ref=null, saveTimer=null;
+ if(!firebaseConfigured||!id){location.href='/admin/login';}
+ else{
+  const {auth,db}=getFirebaseClient();
+  onAuthStateChanged(auth,async user=>{
+   if(!user){location.href='/admin/login';return;}
+   const profile=await getDoc(doc(db,'users',user.uid));
+   if(!profile.exists()||!['admin','editor'].includes(profile.data().role)){await signOut(auth);location.href='/admin/login';return;}
+   ref=doc(db,'posts',id);
+   const snap=await getDoc(ref);
+   if(!snap.exists()){location.href='/admin';return;}
+   const p=snap.data();
+   qs('#title').value=p.title||'';qs('#body').value=plainText(p);qs('#slug').value=p.slug||'';qs('#excerpt').value=p.excerpt||'';qs('#featured').checked=Boolean(p.featured);
+   root.hidden=false;
+  });
+ }
+ ['#title','#body','#slug','#excerpt','#featured'].forEach(selector=>qs(selector)?.addEventListener('input',scheduleSave));
+ qs('#settings-toggle')?.addEventListener('click',()=>qs('#settings').classList.toggle('open'));
+ qs('#publish')?.addEventListener('click',async()=>{await save('published');qs('#publish').textContent='Published';});
+ qs('#preview')?.addEventListener('click',()=>{qs('#preview-title').textContent=qs('#title').value||'Untitled';qs('#preview-body').innerHTML=renderHtml(qs('#body').value);qs('#preview-modal').hidden=false;});
+ qs('#close-preview')?.addEventListener('click',()=>qs('#preview-modal').hidden=true);
+
+ function scheduleSave(){qs('#save-state').textContent='Unsaved';clearTimeout(saveTimer);saveTimer=setTimeout(()=>save(),700);}
+ async function save(status){
+  if(!ref)return;
+  qs('#save-state').textContent='Saving…';
+  const body=qs('#body').value;
+  const data={title:qs('#title').value.trim(),slug:slugify(qs('#slug').value||qs('#title').value),excerpt:qs('#excerpt').value.trim(),featured:qs('#featured').checked,content:{version:1,blocks:body.split(/\n\n+/).filter(Boolean).map(text=>({type:'paragraph',text}))},html:renderHtml(body),updatedAt:serverTimestamp()};
+  if(status==='published'){data.status='published';data.publishedAt=serverTimestamp();}
+  await updateDoc(ref,data);qs('#slug').value=data.slug;qs('#save-state').textContent='Saved';
+ }
+ function plainText(p){if(p.content?.blocks?.length)return p.content.blocks.map(b=>b.text||'').join('\n\n');return String(p.html||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();}
+ function slugify(v){return String(v).toLowerCase().trim().normalize('NFKD').replace(/[^\p{Letter}\p{Number}]+/gu,'-').replace(/^-|-$/g,'');}
+ function renderHtml(v){return String(v).split(/\n\n+/).filter(Boolean).map(p=>'<p>'+escapeHtml(p).replace(/\n/g,'<br>')+'</p>').join('');}
+ function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+</script>
+<style>
+.editor{min-height:100vh;background:#fff}.bar{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px}.bar a{color:#555;text-decoration:none;font-size:13px}.actions{display:flex;align-items:center;gap:18px}.actions span{font-size:11px;color:#999}.actions button{border:0;background:none;cursor:pointer}.actions .publish{background:#151515;color:#fff;padding:9px 14px;border-radius:4px}.canvas{width:min(720px,calc(100% - 48px));margin:12vh auto}.title{display:block;width:100%;border:0;outline:0;font-size:44px;font-weight:650;padding:0;margin-bottom:35px}.body{display:block;width:100%;min-height:50vh;border:0;outline:0;resize:none;font:20px/1.75 Georgia,serif}.settings-toggle{position:fixed;right:24px;bottom:24px;border:1px solid var(--line);background:#fff;width:42px;height:42px;border-radius:50%;cursor:pointer}.settings{position:fixed;right:-360px;top:64px;bottom:0;width:340px;background:#fafafa;border-left:1px solid var(--line);padding:28px;transition:right .2s}.settings.open{right:0}.settings h2{font-size:15px}.settings label{display:grid;gap:8px;font-size:12px;margin:24px 0}.settings input,.settings textarea{border:1px solid var(--line);background:#fff;padding:10px}.settings .check{display:flex;align-items:center}.hint{font-size:11px;line-height:1.5;color:#888}.modal{position:fixed;inset:0;background:rgba(0,0,0,.25);padding:5vh;z-index:10}.preview-card{background:#fff;max-width:900px;height:90vh;overflow:auto;margin:auto;padding:24px 10%}.preview-card>button{float:right}.preview-card article{max-width:650px;margin:12vh auto}.preview-card h1{font-size:42px}.preview-card #preview-body{font:18px/1.8 Georgia,serif}
+</style>
+</AdminLayout>
