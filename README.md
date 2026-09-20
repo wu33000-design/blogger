@@ -1,70 +1,79 @@
-# Blogger — Astro + Ghost + Cloudflare
+# Blogger — Astro + Supabase + Cloudflare
 
-Static-first publication frontend. `main` is the deployment branch.
+Static-first Field Notes publication. `main` is the production deployment branch.
 
-## Runtime architecture
-
-```text
-Ghost editor
-   │ Content API
-   ▼
-Cloudflare build ──> Astro SSG ──> dist/ ──> Workers Static Assets
-                         │
-                         └── feature images/media served from R2
-```
-
-Readers never need a live Ghost connection. Ghost credentials exist only in the build environment.
-
-## Current review mode
-
-If `GHOST_URL` or `GHOST_KEY` is absent, builds intentionally use `src/data/preview-posts.js`. This keeps the review site deployable before CMS provisioning.
-
-Implemented frontend features include article routes, topics, author/date/reading-time metadata, featured content, RSS, sitemap, robots.txt, Open Graph/Twitter metadata, Article JSON-LD, copy-link sharing, adjacent-article navigation, 404, responsive layout and accessibility basics.
-
-## Cloudflare build
-
-Production branch: `main`
+## Architecture
 
 ```text
-Build command:  npm run build
-Deploy command: npx wrangler deploy
+Field Notes CMS (/admin)
+   |-- Supabase Auth
+   |-- Postgres + RLS
+   |-- Supabase Storage (cms-media)
+   |
+   +-- Publish lifecycle -> Supabase pg_net -> secret Cloudflare Deploy Hook
+                                                |
+                                                v
+                                      Astro SSG build
+                                                |
+                                                v
+                                  Cloudflare Workers Static Assets
 ```
 
-Set these build variables when Ghost is ready:
+Reader requests do not query Supabase. Published rows are read at build time and emitted as static HTML.
+
+## Environment
+
+Browser configuration:
 
 ```dotenv
-GHOST_URL=https://cms.example.com
-GHOST_KEY=<Ghost Content API key>
+PUBLIC_SUPABASE_URL=
+PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+Build-only credential:
+
+```dotenv
+SUPABASE_SERVICE_ROLE_KEY=
 SITE_URL=https://your-public-site.example
 ```
 
-Use a **Content API key**, never a Ghost Admin API key.
+Never expose the service-role key as a `PUBLIC_*` variable.
 
-### Publishing trigger
+## Supabase migrations
 
-Because this is SSG, a Ghost publish/update/unpublish event must cause a new Cloudflare build.
+Apply migrations in numeric order:
 
-Preferred flow:
+1. `0001_cms_mvp.sql` — profiles, posts, tags, post_tags and RLS.
+2. `0002_cloudflare_publish_hook.sql` — pg_net publishing hook.
+3. `0003_cms_media.sql` — public-read CMS image bucket with editor write policies.
+4. `0004_publish_lifecycle.sql` — rebuild on publish, republish, unpublish and deletion of published posts.
 
-1. Create a Cloudflare build/deploy hook or equivalent authenticated build trigger for this Worker project.
-2. In Ghost Admin, create a webhook for `post.published`.
-3. Add additional webhooks for `post.edited`, `post.unpublished`, and `post.deleted` when supported by the selected Ghost version/integration.
-4. Point those webhooks at the Cloudflare trigger.
-5. Publish a test post and verify that a new build reads the new Ghost content before deployment.
+Before migration 0002, store the Cloudflare Deploy Hook URL in Supabase Vault under the exact name `cloudflare_deploy_hook_url`. Treat that URL as a secret.
 
-Do not store the trigger URL in this repository. Treat it as a deployment credential.
+## CMS
 
-## Media / R2
+Implemented MVP surfaces:
 
-Ghost should write uploads to R2 through an S3-compatible storage adapter. Keep the bucket credentials with Ghost, not Astro/Cloudflare frontend code. The Content API returns the resulting feature-image/media URLs and Astro emits them into static HTML.
+- Supabase Auth + role authorization.
+- Posts list, search and draft/published filters.
+- Draft creation, autosave, reopen and preview.
+- Structured Paragraph, Heading, Quote, Code, Divider and Image blocks.
+- Tags and topic pages.
+- Slug collision handling.
+- Image upload, alt text and caption.
+- Static publishing automation.
 
-Recommended boundary:
+## Publishing behavior
 
-- Ghost: editorial state
-- MySQL: persistent CMS data
-- R2: persistent media
-- Astro: build-time renderer
-- Cloudflare Workers Static Assets: reader-facing static site
+Only explicit publication lifecycle events rebuild production:
+
+```text
+Publish / republish -> rebuild
+Unpublish           -> rebuild
+Delete published    -> rebuild
+Draft autosave      -> no rebuild
+Published autosave  -> no rebuild
+```
 
 ## Local development
 
@@ -74,18 +83,29 @@ npm install
 npm run dev
 ```
 
-Without Ghost variables this runs against mock content. With them it reads the real Content API.
+Without build-time Supabase credentials, reader pages use repository preview fixtures. The CMS itself requires the two public Supabase variables.
 
-## Deployment acceptance check
+## Cloudflare
 
-After every infrastructure change verify:
+Production branch: `main`
 
-- Cloudflare build references the latest `main` commit.
-- Homepage, article, topic and 404 routes render.
-- `/rss.xml`, `/sitemap-index.xml` and `/robots.txt` respond.
-- No Ghost Content API key, Admin key, R2 credential or build-trigger URL appears in generated HTML or the repository.
-- A Ghost content change produces a fresh static deployment before considering publishing automation complete.
+```text
+Build command:  npm run build
+Deploy command: npx wrangler deploy
+```
 
-## Zero-cost caveat
+Keep non-production development on a separate Git branch and merge only accepted batches into `main` to avoid unnecessary production deployments.
 
-The static frontend can fit comfortably within free Cloudflare allowances at small scale. Ghost is stateful and requires application compute plus persistent MySQL; free hosting should be treated as prototype/hobby infrastructure unless its reliability guarantees meet the publication's needs.
+## Acceptance checks
+
+Before merging a CMS batch into `main`:
+
+- migrations required by the batch have been applied;
+- no service-role key, Vault secret or Deploy Hook URL is committed;
+- draft create/save/reopen works;
+- structured blocks round-trip without loss;
+- image upload/preview works;
+- published-only Astro build succeeds;
+- homepage, article, topic, RSS, sitemap and 404 routes render;
+- publish triggers one fresh Cloudflare build;
+- unpublish/delete of published content removes it after the next build.
