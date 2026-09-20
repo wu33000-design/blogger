@@ -62,5 +62,9 @@ $$;
 
 drop trigger if exists posts_cloudflare_publish_build on public.posts;
 create trigger posts_cloudflare_publish_build
-after update of status, published_at or delete on public.posts
+after update of status, published_at on public.posts
+for each row execute function public.trigger_cloudflare_publish_build();
+
+create trigger posts_cloudflare_delete_build
+after delete on public.posts
 for each row execute function public.trigger_cloudflare_publish_build();
