@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isEditor() {
+      return signedIn()
+        && currentUser().data.role in ['admin', 'editor'];
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && currentUser().data.role == 'admin';
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /posts/{postId} {
+      allow read, create, update: if isEditor();
+      allow delete: if isAdmin();
+    }
+
+    match /tags/{tagId} {
+      allow read: if isEditor();
+      allow create, update: if isEditor();
+      allow delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
