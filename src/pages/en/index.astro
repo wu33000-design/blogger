@@ -2,7 +2,7 @@
 import Layout from '../../layouts/Layout.astro'; import {getEnglishPosts,getTags} from '../../lib/posts.js'; import {getSiteContent} from '../../lib/site-content.js';
 const posts=await getEnglishPosts(); const tags=await getTags('en'); const site=await getSiteContent('en'); const featured=posts.find(p=>p.featured)||posts[0]; const fmt=d=>new Intl.DateTimeFormat('en',{year:'numeric',month:'short',day:'numeric'}).format(new Date(d));
 ---
-<Layout title="Field Notes — English" locale="en" switchHref="/">
+<Layout title="Field Notes — English" locale="en" switchHref="/" footerText={site['site.footer']}>
 <main id="content" class="shell"><section class="intro"><div><p>{site['home.eyebrow']}</p><h1>{site['home.headline']}</h1></div><p class="dek">{site['home.subjects']}<br/>{site['home.intro']}</p></section>
 {featured?<section class="featured"><div class="feature-meta"><span>Featured note</span><span>{featured.reading_time} min</span></div><a href={`/en/post/${featured.slug}`}><h2>{featured.title}</h2><p>{featured.excerpt}</p><span class="read">Read note →</span></a></section>:<p class="empty">No English translations have been published yet.</p>}
 <section id="index" class="index"><header><span>Index</span><span>{String(posts.length).padStart(2,'0')} notes</span></header>{posts.map((post,i)=><a class="row" href={`/en/post/${post.slug}`}><span>{String(i+1).padStart(2,'0')}</span><div><small>{post.primary_tag?.name||'Field note'} · {post.reading_time} min</small><h2>{post.title}</h2></div><time>{fmt(post.published_at)}</time></a>)}</section>
