@@ -1,0 +1,19 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="網站內容 — Field Notes CMS">
+<div class="cms" id="cms" hidden>
+<aside class="side"><div class="cms-brand">FIELD NOTES</div><a class="view" href="/" target="_blank">查看網站 ↗</a><nav><a href="/admin">文章</a><a href="/admin/tags">標籤</a><a href="/admin/content" class="active">網站內容</a></nav><div class="side-foot"><button id="sign-out" class="btn secondary">登出</button></div></aside>
+<main class="main"><header class="top"><div><h1>網站內容</h1><p class="muted">編輯首頁與全站文字。版面與樣式維持不變。</p></div><button id="save" class="btn">儲存變更</button></header><p id="message" class="muted"></p><div id="fields" class="fields"></div></main></div>
+<script>
+ import {supabaseConfigured,getSupabaseClient} from '../../lib/supabase-client.js';
+ const defs=[['home.eyebrow','首頁小標','text'],['home.headline','首頁標題','textarea'],['home.subjects','領域','text'],['home.intro','首頁簡介','textarea'],['home.about','關於','textarea'],['site.footer','頁尾說明','text']];
+ const cms=document.querySelector('#cms'),box=document.querySelector('#fields'),message=document.querySelector('#message');let supabase,user;
+ if(!supabaseConfigured)location.href='/admin/login';else{supabase=getSupabaseClient();const {data:{session}}=await supabase.auth.getSession();user=session?.user;if(!user)location.href='/admin/login';else{const {data:profile}=await supabase.from('profiles').select('role').eq('id',user.id).single();if(!['admin','editor'].includes(profile?.role)){await supabase.auth.signOut();location.href='/admin/login';}else{cms.hidden=false;await load();}}}
+ async function load(){const {data,error}=await supabase.from('site_content').select('key,value_zh_hant,value_en');if(error){message.textContent=error.message;return;}const map=new Map((data||[]).map(x=>[x.key,x]));box.innerHTML=defs.map(([key,label,type])=>{const row=map.get(key)||{};const input=(lang,value)=>type==='textarea'?'<textarea data-key="'+key+'" data-lang="'+lang+'" rows="4">'+esc(value||'')+'</textarea>':'<input data-key="'+key+'" data-lang="'+lang+'" value="'+esc(value||'')+'">';return '<section class="field"><h2>'+label+'</h2><label>繁體中文'+input('zh',row.value_zh_hant)+'</label><label>英文翻譯 <small>（選填）</small>'+input('en',row.value_en)+'</label></section>';}).join('');}
+ document.querySelector('#save')?.addEventListener('click',async()=>{message.textContent='儲存中…';const items=defs.map(([key])=>({key,value_zh_hant:box.querySelector('[data-key="'+key+'"][data-lang="zh"]').value.trim(),value_en:box.querySelector('[data-key="'+key+'"][data-lang="en"]').value.trim()||null}));const {error}=await supabase.rpc('update_site_content',{items});if(error){message.textContent=error.message;return;}message.textContent='已儲存。網站正在重新建置。';});
+ document.querySelector('#sign-out')?.addEventListener('click',async()=>{await supabase.auth.signOut();location.href='/admin/login';});
+ function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+</script>
+<style>.fields{display:grid;gap:14px;max-width:900px}.field{background:#fff;border:1px solid var(--line);padding:20px;display:grid;grid-template-columns:160px 1fr 1fr;gap:18px}.field h2{font-size:14px;margin:4px 0}.field label{display:grid;gap:7px;font-size:12px}.field input,.field textarea{width:100%;border:1px solid var(--line);padding:10px;resize:vertical}.field small{color:var(--muted)}@media(max-width:900px){.field{grid-template-columns:1fr}}</style>
+</AdminLayout>
