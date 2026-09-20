@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro'; import {getPosts,getTags} from '..
 const posts=await getPosts(); const tags=await getTags(); const site=await getSiteContent('zh'); const featured=posts.find(p=>p.featured) || posts[0];
 const fmt=d=>new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(d));
 ---
-<Layout title="Field Notes">
+<Layout title="Field Notes" footerText={site['site.footer']}>
 <main id="content" class="shell">
 <section class="intro"><div><p>{site['home.eyebrow']}</p><h1>{site['home.headline']}</h1></div><p class="dek">{site['home.subjects']}<br/>{site['home.intro']}</p></section>
 {featured&&<section class="featured"><div class="feature-meta"><span>精選文章</span><span>{featured.reading_time} 分鐘</span></div><a href={`/post/${featured.slug}`} class:list={{"with-image":!!featured.feature_image}}>{featured.feature_image&&<img src={featured.feature_image} alt={featured.feature_image_alt||""}/>}<div><h2>{featured.title}</h2><p>{featured.excerpt}</p><span class="read">閱讀全文 →</span></div></a></section>}
