@@ -1,6 +1,6 @@
 {
-  "name":"blogger","version":"0.2.0","private":true,"type":"module",
+  "name":"blogger","version":"0.3.0","private":true,"type":"module",
   "scripts":{"dev":"astro dev","build":"astro build","preview":"astro preview","deploy":"npm run build && wrangler deploy"},
-  "dependencies":{"@astrojs/sitemap":"^3.6.0","astro":"^6.0.0","firebase":"^12.3.0"},
+  "dependencies":{"@astrojs/sitemap":"^3.6.0","@supabase/supabase-js":"^2.57.4","astro":"^6.0.0"},
   "devDependencies":{"wrangler":"^4.0.0"}
 }
