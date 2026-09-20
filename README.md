@@ -1,19 +1,70 @@
-# Blogger — Astro + Ghost + Cloudflare $0 Architecture
+# Blogger — Astro + Ghost + Cloudflare
 
-This repository contains a **pure static Astro frontend** for a headless Ghost publication.
+Static-first publication frontend. `main` is the deployment branch.
 
-> Internal review deployment is currently using local mock content so the frontend can be reviewed before Ghost is connected.
+## Runtime architecture
 
-## Current deployment
+```text
+Ghost editor
+   │ Content API
+   ▼
+Cloudflare build ──> Astro SSG ──> dist/ ──> Workers Static Assets
+                         │
+                         └── feature images/media served from R2
+```
 
-- **Frontend:** Astro static site generation
-- **Source:** GitHub `main`
-- **Hosting:** Cloudflare Workers Static Assets
-- **CMS:** Ghost (planned build-time content source)
-- **Media:** Cloudflare R2 (planned)
-- **Database:** external MySQL for Ghost
+Readers never need a live Ghost connection. Ghost credentials exist only in the build environment.
 
-Astro fetches Ghost content at build time only. When `GHOST_URL` and `GHOST_KEY` are absent, the current review build uses `src/data/preview-posts.js`.
+## Current review mode
+
+If `GHOST_URL` or `GHOST_KEY` is absent, builds intentionally use `src/data/preview-posts.js`. This keeps the review site deployable before CMS provisioning.
+
+Implemented frontend features include article routes, topics, author/date/reading-time metadata, featured content, RSS, sitemap, robots.txt, Open Graph/Twitter metadata, Article JSON-LD, copy-link sharing, adjacent-article navigation, 404, responsive layout and accessibility basics.
+
+## Cloudflare build
+
+Production branch: `main`
+
+```text
+Build command:  npm run build
+Deploy command: npx wrangler deploy
+```
+
+Set these build variables when Ghost is ready:
+
+```dotenv
+GHOST_URL=https://cms.example.com
+GHOST_KEY=<Ghost Content API key>
+SITE_URL=https://your-public-site.example
+```
+
+Use a **Content API key**, never a Ghost Admin API key.
+
+### Publishing trigger
+
+Because this is SSG, a Ghost publish/update/unpublish event must cause a new Cloudflare build.
+
+Preferred flow:
+
+1. Create a Cloudflare build/deploy hook or equivalent authenticated build trigger for this Worker project.
+2. In Ghost Admin, create a webhook for `post.published`.
+3. Add additional webhooks for `post.edited`, `post.unpublished`, and `post.deleted` when supported by the selected Ghost version/integration.
+4. Point those webhooks at the Cloudflare trigger.
+5. Publish a test post and verify that a new build reads the new Ghost content before deployment.
+
+Do not store the trigger URL in this repository. Treat it as a deployment credential.
+
+## Media / R2
+
+Ghost should write uploads to R2 through an S3-compatible storage adapter. Keep the bucket credentials with Ghost, not Astro/Cloudflare frontend code. The Content API returns the resulting feature-image/media URLs and Astro emits them into static HTML.
+
+Recommended boundary:
+
+- Ghost: editorial state
+- MySQL: persistent CMS data
+- R2: persistent media
+- Astro: build-time renderer
+- Cloudflare Workers Static Assets: reader-facing static site
 
 ## Local development
 
@@ -23,41 +74,18 @@ npm install
 npm run dev
 ```
 
-Optional Ghost variables:
+Without Ghost variables this runs against mock content. With them it reads the real Content API.
 
-```dotenv
-GHOST_URL=https://cms.example.com
-GHOST_KEY=your_content_api_key
-SITE_URL=https://blog.example.com
-```
+## Deployment acceptance check
 
-## Cloudflare Workers build
+After every infrastructure change verify:
 
-Use:
-
-- Production branch: `main`
-- Build command: `npm run build`
-- Deploy command: `npx wrangler deploy`
-- Static asset directory: `dist` (configured in `wrangler.jsonc`)
-
-The internal review UI can build without Ghost credentials. When Ghost is connected, use a **Content API** key only; never expose a Ghost Admin API key to the frontend.
-
-## Ghost → Cloudflare R2
-
-For the eventual Ghost service, store media in R2 through an S3-compatible Ghost storage adapter rather than relying on ephemeral container storage.
-
-Recommended separation:
-
-- Ghost: editorial CMS
-- external MySQL: persistent CMS data
-- R2: persistent media
-- Astro: build-time content consumer
-- Cloudflare Workers Static Assets: generated public/review frontend
-
-## Publishing workflow
-
-After Ghost integration, publishing or updating an article must trigger a new Astro build. A Ghost webhook can call the deployment/build mechanism so the generated static site stays synchronized with the CMS.
+- Cloudflare build references the latest `main` commit.
+- Homepage, article, topic and 404 routes render.
+- `/rss.xml`, `/sitemap-index.xml` and `/robots.txt` respond.
+- No Ghost Content API key, Admin key, R2 credential or build-trigger URL appears in generated HTML or the repository.
+- A Ghost content change produces a fresh static deployment before considering publishing automation complete.
 
 ## Zero-cost caveat
 
-Astro and small static deployments can fit comfortably within Cloudflare free allowances. Ghost is the difficult part of a strict $0 architecture because it requires application compute plus persistent SQL. Treat free Ghost hosting as prototype/hobby infrastructure unless the selected provider offers the reliability required by the publication.
+The static frontend can fit comfortably within free Cloudflare allowances at small scale. Ghost is stateful and requires application compute plus persistent MySQL; free hosting should be treated as prototype/hobby infrastructure unless its reliability guarantees meet the publication's needs.
