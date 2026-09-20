@@ -36,7 +36,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   document.querySelector('#sign-out')?.addEventListener('click',async()=>{await signOut(auth);location.href='/admin/login';});
   document.querySelector('#new-post')?.addEventListener('click',async()=>{
    const ref=await addDoc(collection(db,'posts'),{title:'',slug:'',status:'draft',excerpt:'',content:{version:1,blocks:[]},html:'',tagIds:[],authorId:auth.currentUser.uid,featured:false,featureImage:null,featureImageAlt:null,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),publishedAt:null});
-   location.href='/admin/posts/'+ref.id;
+   location.href='/admin/editor?id='+encodeURIComponent(ref.id);
   });
  }
  document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('on',x===b));render()}));
@@ -44,7 +44,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
  function render(){
   const term=(search?.value||'').toLowerCase();
   const rows=allPosts.filter(p=>(filter==='all'||p.status===filter)&&String(p.title||'Untitled').toLowerCase().includes(term));
-  list.innerHTML=rows.length?rows.map(p=>`<a class="row" href="/admin/posts/${p.id}"><div><strong>${escapeHtml(p.title||'Untitled')}</strong><span>${p.status||'draft'}</span></div><time>${date(p.updatedAt)}</time></a>`).join(''):'<p class="muted">No posts yet.</p>';
+  list.innerHTML=rows.length?rows.map(p=>`<a class="row" href="/admin/editor?id=${encodeURIComponent(p.id)}"><div><strong>${escapeHtml(p.title||'Untitled')}</strong><span>${p.status||'draft'}</span></div><time>${date(p.updatedAt)}</time></a>`).join(''):'<p class="muted">No posts yet.</p>';
  }
  const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
  const date=v=>v?.toDate?v.toDate().toLocaleDateString():'—';
