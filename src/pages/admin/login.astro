@@ -2,7 +2,7 @@
 import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
 <AdminLayout title="登入 — Field Notes CMS">
-<main class="login"><form id="login-form" class="card"><div class="mark">FIELD NOTES</div><h1>登入內容管理系統</h1><label>Email<input id="email" type="email" autocomplete="email" required></label><label>密碼<input id="password" type="password" autocomplete="current-password" required></label><button class="btn" type="submit">登入</button><p id="message" class="muted" role="status">僅限授權的編輯與管理員。</p></form></main>
+<main class="login"><form id="login-form" class="card"><div class="mark">FIELD NOTES</div><h1>登入內容管理系統</h1><label>電子郵件<input id="email" type="email" autocomplete="email" required></label><label>密碼<input id="password" type="password" autocomplete="current-password" required></label><button class="btn" type="submit">登入</button><p id="message" class="muted" role="status">僅限授權的編輯與管理員。</p></form></main>
 <script>
  import { supabaseConfigured,getSupabaseClient } from '../../lib/supabase-client.js';
  const form=document.querySelector('#login-form'),message=document.querySelector('#message');
@@ -17,13 +17,13 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   message.textContent='登入中…';
   const supabase=getSupabaseClient();
   const {data,error}=await supabase.auth.signInWithPassword({email:document.querySelector('#email').value,password:document.querySelector('#password').value});
-  if(error){message.textContent=error.message;return;}
+  if(error){message.textContent='登入失敗，請確認電子郵件與密碼。';return;}
   const {data:profile,error:profileError}=await supabase.from('profiles').select('role').eq('id',data.user.id).single();
   if(profileError||!['admin','editor'].includes(profile?.role)){await supabase.auth.signOut();message.textContent='此帳號沒有 CMS 使用權限。';return;}
   location.href='/admin';
  });
 </script>
 <style>
-.login{min-height:100vh;display:grid;place-items:center;padding:24px}.card{width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:42px}.mark{font:700 11px monospace;letter-spacing:.1em;margin-bottom:46px}.card h1{font-size:27px;font-weight:550;margin:0 0 34px}.card label{display:grid;gap:8px;font-size:12px;margin:18px 0;color:#555}.card input{width:100%;border:1px solid var(--line);background:#fff;padding:12px}.card .btn{width:100%;margin-top:12px}.card p{font-size:12px;margin:18px 0 0}
+.login{min-height:100vh;display:grid;place-items:center;padding:24px}.card{width:min(400px,100%);background:var(--admin-panel);border:1px solid var(--admin-line);border-radius:var(--panel-radius);padding:40px}.mark{font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:40px}.card h1{font-size:26px;font-weight:650;letter-spacing:-.02em;margin:0 0 30px}.card label{display:grid;gap:8px;font-size:12px;margin:18px 0;color:#555}.card input{width:100%;padding:10px}.card .btn{width:100%;margin-top:12px}.card p{font-size:12px;margin:18px 0 0}
 </style>
 </AdminLayout>
