@@ -67,15 +67,15 @@ Never expose the service-role key to browser code.
 - [x] SQL schema.
 - [x] RLS policies.
 - [x] Admin UI reused from Firebase prototype.
-- [ ] Live Supabase project connected.
-- [ ] Admin login verified.
-- [ ] Draft create/save/reopen verified.
-- [ ] Slug uniqueness UX.
-- [ ] Tags CRUD.
-- [ ] Structured block editor.
+- [x] Live Supabase project connected.
+- [x] Admin login verified.
+- [x] Draft create/save/reopen verified.
+- [x] Slug uniqueness UX.
+- [x] Tags CRUD.
+- [x] Structured block editor.
 - [x] Build-time published-post adapter.
 - [x] Publish -> Cloudflare rebuild (migration ready; requires Deploy Hook URL in Supabase Vault).
-- [ ] Media.
+- [x] Media/Image block implemented on development branch; migration 0003 required before merge verification.
 - [ ] Firebase prototype files removed after Supabase live validation.
 
 ## Scope rule
@@ -97,3 +97,10 @@ Cloudflare Workers Builds supports Deploy Hooks. Create one for `main`, then sto
 Run `supabase/migrations/0002_cloudflare_publish_hook.sql` after the Vault secret exists.
 
 The database trigger runs only when Publish/republish changes `published_at`. Normal editor autosaves do not trigger builds. The hook URL is never exposed to browser code or committed to Git.
+
+
+## Media
+
+Migration `0003_cms_media.sql` creates a public-read `cms-media` Storage bucket with a 10 MB image limit. Public reads are deliberate because published static HTML references Storage URLs directly. Upload/update require an authenticated editor; delete requires admin.
+
+The structured editor supports an Image block with upload, alt text, optional caption, preview, JSON persistence and static HTML rendering. Run migration 0003 in Supabase before production verification.
