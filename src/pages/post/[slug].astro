@@ -10,7 +10,7 @@ const jsonLd={"@context":"https://schema.org","@type":"Article",headline:post.ti
 <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 <main id="content" class="shell article"><a class="back" href="/">← Index</a>
 <header><div class="meta"><span>{post.primary_tag?.name || 'Field note'}</span><time datetime={post.published_at}>{fmt(post.published_at)}</time></div><h1>{post.title}</h1><p class="lead">{post.excerpt}</p><div class="details"><span>{author}</span><span>{post.reading_time} min read</span></div></header>
-{post.feature_image ? <figure class="feature"><img src={post.feature_image} alt="" loading="eager"/></figure> : <div class="mark" aria-hidden="true"><span></span></div>}
+{post.feature_image ? <figure class="feature"><img src={post.feature_image} alt={post.feature_image_alt||""} loading="eager"/></figure> : <div class="mark" aria-hidden="true"><span></span></div>}
 <section class="prose body" set:html={post.html}/>
 {post.tags?.length>0&&<div class="tags">{post.tags.map(tag=><a href={`/topics/${tag.slug}`}>{tag.name}</a>)}</div>}
 <div class="share"><span>Share</span><button id="copy-link" type="button">Copy link</button></div>
