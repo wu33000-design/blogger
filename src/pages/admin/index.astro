@@ -1,8 +1,8 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
-<AdminLayout title="Posts — Field Notes CMS">
-<div class="cms" id="cms" hidden><aside class="side"><div class="cms-brand">FIELD NOTES</div><a class="view" href="/" target="_blank">View site ↗</a><nav><a href="/admin" class="active">Posts</a><a href="/admin/tags">Tags</a><a href="/admin/settings">Settings</a></nav><div class="side-foot"><button id="sign-out" class="btn secondary">Sign out</button></div></aside><main class="main"><header class="top"><div><h1>Posts</h1><p class="muted">Your publication, in one place.</p></div><button id="new-post" class="btn">New post</button></header><div class="filters"><button data-filter="all" class="on">All</button><button data-filter="draft">Drafts</button><button data-filter="published">Published</button><input id="search" type="search" placeholder="Search posts"></div><div id="posts" class="posts"><p class="muted">Loading…</p></div></main></div>
+<AdminLayout title="文章 — Field Notes CMS">
+<div class="cms" id="cms" hidden><aside class="side"><div class="cms-brand">FIELD NOTES</div><a class="view" href="/" target="_blank">查看網站 ↗</a><nav><a href="/admin" class="active">文章</a><a href="/admin/tags">標籤</a><a href="/admin/settings">設定</a></nav><div class="side-foot"><button id="sign-out" class="btn secondary">登出</button></div></aside><main class="main"><header class="top"><div><h1>文章</h1><p class="muted">集中管理草稿與已發布文章。</p></div><button id="new-post" class="btn">新增文章</button></header><div class="filters"><button data-filter="all" class="on">全部</button><button data-filter="draft">草稿</button><button data-filter="published">已發布</button><input id="search" type="search" placeholder="搜尋文章"></div><div id="posts" class="posts"><p class="muted">載入中…</p></div></main></div>
 <script>
  import { supabaseConfigured,getSupabaseClient } from '../../lib/supabase-client.js';
  const cms=document.querySelector('#cms'),list=document.querySelector('#posts'),search=document.querySelector('#search');let allPosts=[],filter='all',user;
@@ -20,7 +20,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   document.querySelector('#new-post')?.addEventListener('click',async()=>{const slug='draft-'+crypto.randomUUID();const {data,error}=await supabase.from('posts').insert({author_id:user.id,slug}).select('id').single();if(error){alert(error.message);return;}location.href='/admin/editor?id='+encodeURIComponent(data.id);});
  }
  document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('on',x===b));render()}));search?.addEventListener('input',render);
- function render(){const term=(search?.value||'').toLowerCase();const rows=allPosts.filter(p=>(filter==='all'||p.status===filter)&&String(p.title||'Untitled').toLowerCase().includes(term));list.innerHTML=rows.length?rows.map(p=>`<a class="row" href="/admin/editor?id=${encodeURIComponent(p.id)}"><div><strong>${escapeHtml(p.title||'Untitled')}</strong><span>${p.status||'draft'}</span></div><time>${p.updated_at?new Date(p.updated_at).toLocaleDateString():'—'}</time></a>`).join(''):'<p class="muted">No posts yet.</p>';}
+ function render(){const term=(search?.value||'').toLowerCase();const rows=allPosts.filter(p=>(filter==='all'||p.status===filter)&&String(p.title||'未命名文章').toLowerCase().includes(term));list.innerHTML=rows.length?rows.map(p=>`<a class="row" href="/admin/editor?id=${encodeURIComponent(p.id)}"><div><strong>${escapeHtml(p.title||'Untitled')}</strong><span>${p.status==='published'?'已發布':'草稿'}</span></div><time>${p.updated_at?new Date(p.updated_at).toLocaleDateString():'—'}</time></a>`).join(''):'<p class="muted">No posts yet.</p>';}
  function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 </script>
 <style>
