@@ -10,10 +10,40 @@ const { title = 'Field Notes CMS' } = Astro.props;
   <meta name="robots" content="noindex,nofollow">
   <title>{title}</title>
   <style is:global>
-    :root{--bg:#f7f7f7;--panel:#fff;--ink:#151515;--muted:#777;--line:#e5e5e5}
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:Inter,Arial,"Noto Sans TC",sans-serif}
-    button,input{font:inherit}.cms{min-height:100vh;display:grid;grid-template-columns:240px 1fr}.side{position:fixed;inset:0 auto 0 0;width:240px;background:#151515;color:#aaa;padding:30px 22px;display:flex;flex-direction:column}.cms-brand{color:#fff;font-weight:700;font-size:15px;letter-spacing:.02em;margin-bottom:32px}.side a{color:inherit;text-decoration:none;padding:9px 10px;border-radius:4px;font-size:14px}.side a:hover,.side a.active{color:#fff;background:#252525}.side .view{margin-bottom:22px}.side nav{display:grid;gap:2px}.side-foot{margin-top:auto}.main{grid-column:2;padding:54px 6vw}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:42px}.top h1{font-size:30px;margin:0;font-weight:650}.btn{border:0;border-radius:4px;background:#151515;color:#fff;padding:10px 15px;cursor:pointer}.btn.secondary{background:#fff;color:#222;border:1px solid var(--line)}.muted{color:var(--muted)}
-    @media(max-width:760px){.cms{display:block}.side{position:static;width:auto;min-height:auto}.side nav{grid-template-columns:repeat(3,1fr)}.side-foot{margin-top:20px}.main{padding:32px 20px}}
+    :root{
+      --admin-bg:#f5f5f2;--admin-panel:#fff;--admin-subtle:#fafaf8;
+      --admin-ink:#171717;--admin-secondary:#666;--admin-muted:#999;
+      --admin-line:#e5e5e2;--admin-success:#47704d;--admin-danger:#9b2c2c;
+      --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;
+      --space-6:24px;--space-8:32px;--space-12:48px;
+      --control-radius:4px;--panel-radius:6px;
+      --bg:var(--admin-bg);--panel:var(--admin-panel);--ink:var(--admin-ink);
+      --muted:var(--admin-secondary);--line:var(--admin-line)
+    }
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--admin-bg);color:var(--admin-ink);font-family:Inter,Arial,"Noto Sans TC",sans-serif;font-size:13px}
+    button,input,textarea,select{font:inherit}button,a,input,textarea{outline-color:#777}
+    .cms{min-height:100vh;display:grid;grid-template-columns:192px minmax(0,1fr)}
+    .side{position:fixed;inset:0 auto 0 0;width:192px;background:#171717;color:#aaa;padding:24px 16px 18px;display:flex;flex-direction:column}
+    .cms-brand{color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;margin:0 8px 28px}
+    .side a{display:block;color:inherit;text-decoration:none;padding:8px 10px;border-radius:var(--control-radius);font-size:12px}
+    .side a:hover,.side a.active{color:#fff;background:#252525}.side .view{margin-bottom:16px;color:#ccc}
+    .side nav{display:grid;gap:2px}.side-foot{margin-top:auto;padding:8px}
+    .main{grid-column:2;width:100%;max-width:1440px;padding:48px clamp(28px,5vw,72px) 72px}
+    .top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px}
+    .top h1{font-size:30px;line-height:1.1;letter-spacing:-.025em;margin:0;font-weight:650}
+    .top p{margin:7px 0 0;font-size:12px}.muted{color:var(--admin-secondary)}
+    .section-kicker{display:block;margin-bottom:8px;color:var(--admin-muted);font-size:10px;font-weight:600}
+    .btn{border:1px solid #171717;border-radius:var(--control-radius);background:#171717;color:#fff;padding:9px 13px;cursor:pointer;font-size:12px;font-weight:550}
+    .btn:hover{background:#2a2a2a}.btn.secondary{background:#fff;color:#333;border-color:var(--admin-line)}.btn.secondary:hover{background:var(--admin-subtle)}
+    .panel{background:var(--admin-panel);border:1px solid var(--admin-line);border-radius:var(--panel-radius)}
+    label{color:#555}input,textarea,select{border:1px solid #ddd;border-radius:var(--control-radius);background:#fff;color:var(--admin-ink)}
+    input:focus,textarea:focus,select:focus{border-color:#999}
+    .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#aaa}.status-dot.success{background:var(--admin-success)}
+    @media(max-width:760px){
+      .cms{display:block}.side{position:static;width:auto;min-height:auto;padding:16px}.cms-brand{margin-bottom:14px}
+      .side .view{margin-bottom:10px}.side nav{grid-template-columns:repeat(3,1fr)}.side-foot{margin-top:12px}
+      .main{padding:32px 20px 56px}.top{align-items:flex-end}
+    }
   </style>
 </head>
 <body><slot /></body>
