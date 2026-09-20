@@ -1,6 +1,6 @@
 # Firebase CMS Development Plan
 
-Status: **Approved direction / implementation pending**  
+Status: **Implementation in progress — Phase 0 substantially complete; Phase 1 started**  
 Repository: `wu33000-design/blogger`  
 Deployment branch: `main`
 
@@ -327,36 +327,36 @@ R2 credentials must remain server-side.
 
 ### Phase 0 — Architecture migration
 
-- [ ] Add Firebase dependencies/configuration.
-- [ ] Define environment contract.
-- [ ] Add Firestore schema documentation.
-- [ ] Add Firestore Security Rules.
-- [ ] Preserve mock-content fallback.
+- [x] Add Firebase dependencies/configuration.
+- [x] Define environment contract.
+- [x] Add Firestore schema documentation.
+- [x] Add Firestore Security Rules.
+- [x] Preserve mock-content fallback.
 - [ ] Mark Ghost infrastructure as deprecated, not immediately deleted.
 
 **Gate:** existing public build still succeeds and no secret is committed.
 
 ### Phase 1 — Admin shell + authentication
 
-- [ ] `/admin/login`.
-- [ ] Protected `/admin` layout.
-- [ ] Ghost-inspired navigation.
-- [ ] Firebase Auth integration.
-- [ ] Unauthorized access handling.
+- [x] `/admin/login`.
+- [x] Protected `/admin` layout (client-authenticated shell; rules remain authority).
+- [x] Ghost-inspired navigation.
+- [x] Firebase Auth integration.
+- [x] Unauthorized access handling.
 - [ ] Sign out.
 
 **Gate:** anonymous user cannot read/write private CMS data through the admin workflow.
 
 ### Phase 2 — Posts and tags
 
-- [ ] Posts list.
-- [ ] Draft/published filtering.
-- [ ] Search.
-- [ ] Create post.
-- [ ] Edit post.
+- [x] Posts list.
+- [x] Draft/published filtering.
+- [x] Search.
+- [x] Create post.
+- [x] Edit post.
 - [ ] Tags CRUD.
 - [ ] Slug uniqueness validation.
-- [ ] Autosave or explicit reliable draft save.
+- [x] Autosave draft scaffold (requires live Firebase validation).
 
 **Gate:** draft survives reload and cannot appear on the public site.
 
