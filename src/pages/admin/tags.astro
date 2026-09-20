@@ -1,0 +1,25 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="Tags — Field Notes CMS">
+<div class="cms" id="cms" hidden><aside class="side"><div class="cms-brand">FIELD NOTES</div><a class="view" href="/" target="_blank">View site ↗</a><nav><a href="/admin">Posts</a><a href="/admin/tags" class="active">Tags</a><a href="/admin/settings">Settings</a></nav><div class="side-foot"><button id="sign-out" class="btn secondary">Sign out</button></div></aside><main class="main"><header class="top"><div><h1>Tags</h1><p class="muted">Organize notes into public topics.</p></div></header><form id="tag-form" class="tag-form"><input id="name" required placeholder="Tag name"><input id="slug" required placeholder="tag-slug"><input id="description" placeholder="Description"><button class="btn">Add tag</button></form><p id="message" class="muted"></p><div id="tags" class="tags"></div></main></div>
+<script>
+ import { supabaseConfigured,getSupabaseClient } from '../../lib/supabase-client.js';
+ const cms=document.querySelector('#cms'),list=document.querySelector('#tags'),form=document.querySelector('#tag-form'),message=document.querySelector('#message');let supabase,role;
+ if(!supabaseConfigured)location.href='/admin/login'; else{
+  supabase=getSupabaseClient();const {data:{session}}=await supabase.auth.getSession();
+  if(!session)location.href='/admin/login'; else{
+   const {data:profile}=await supabase.from('profiles').select('role').eq('id',session.user.id).single();role=profile?.role;
+   if(!['admin','editor'].includes(role)){await supabase.auth.signOut();location.href='/admin/login';}else{cms.hidden=false;await load();}
+  }
+ }
+ async function load(){const {data,error}=await supabase.from('tags').select('id,name,slug,description').order('name');if(error){message.textContent=error.message;return;}list.innerHTML=(data||[]).length?(data||[]).map(t=>`<div class="tag" data-id="${t.id}"><div><strong>${esc(t.name)}</strong><code>/topics/${esc(t.slug)}</code><p>${esc(t.description||'')}</p></div>${role==='admin'?'<button class="delete">Delete</button>':''}</div>`).join(''):'<p class="muted">No tags yet.</p>';}
+ form?.addEventListener('submit',async e=>{e.preventDefault();message.textContent='Saving…';const name=document.querySelector('#name').value.trim(),slug=slugify(document.querySelector('#slug').value||name),description=document.querySelector('#description').value.trim();const {error}=await supabase.from('tags').insert({name,slug,description});if(error){message.textContent=error.message;return;}form.reset();message.textContent='Saved';await load();});
+ document.querySelector('#name')?.addEventListener('input',e=>{const s=document.querySelector('#slug');if(!s.dataset.edited)s.value=slugify(e.target.value);});document.querySelector('#slug')?.addEventListener('input',e=>e.target.dataset.edited='1');
+ list?.addEventListener('click',async e=>{const b=e.target.closest('.delete');if(!b)return;const row=b.closest('.tag');if(!confirm('Delete this tag?'))return;const {error}=await supabase.from('tags').delete().eq('id',row.dataset.id);message.textContent=error?.message||'Deleted';if(!error)await load();});
+ document.querySelector('#sign-out')?.addEventListener('click',async()=>{await supabase.auth.signOut();location.href='/admin/login';});
+ function slugify(v){return String(v).toLowerCase().trim().normalize('NFKD').replace(/[^\p{Letter}\p{Number}]+/gu,'-').replace(/^-|-$/g,'');}
+ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+</script>
+<style>.tag-form{display:grid;grid-template-columns:1fr 1fr 2fr auto;gap:10px;padding-bottom:28px;border-bottom:1px solid var(--line)}.tag-form input{border:1px solid var(--line);background:#fff;padding:10px}.tags{background:#fff}.tag{display:flex;justify-content:space-between;gap:20px;padding:20px 18px;border-bottom:1px solid var(--line)}.tag strong{display:block}.tag code{display:block;color:#888;font-size:11px;margin-top:6px}.tag p{color:#777;font-size:13px;margin:8px 0 0}.delete{border:0;background:none;color:#888;cursor:pointer}@media(max-width:900px){.tag-form{grid-template-columns:1fr}}</style>
+</AdminLayout>
