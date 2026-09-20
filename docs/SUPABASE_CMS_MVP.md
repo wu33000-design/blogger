@@ -74,7 +74,7 @@ Never expose the service-role key to browser code.
 - [ ] Tags CRUD.
 - [ ] Structured block editor.
 - [x] Build-time published-post adapter.
-- [ ] Publish -> Cloudflare rebuild.
+- [x] Publish -> Cloudflare rebuild (migration ready; requires Deploy Hook URL in Supabase Vault).
 - [ ] Media.
 - [ ] Firebase prototype files removed after Supabase live validation.
 
@@ -86,3 +86,14 @@ Do not expand the MVP into SSR merely to use Supabase. The current admin can aut
 <!-- deployment trigger: Supabase environment configured in Cloudflare -->
 
 <!-- deployment trigger: Supabase service-role build credential configured in Cloudflare -->
+
+
+## Automatic publish deployment
+
+Cloudflare Workers Builds supports Deploy Hooks. Create one for `main`, then store its full URL in Supabase Vault with the exact secret name:
+
+`cloudflare_deploy_hook_url`
+
+Run `supabase/migrations/0002_cloudflare_publish_hook.sql` after the Vault secret exists.
+
+The database trigger runs only when Publish/republish changes `published_at`. Normal editor autosaves do not trigger builds. The hook URL is never exposed to browser code or committed to Git.
