@@ -19,44 +19,29 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 </div>
 <div id="preview-modal" class="modal" hidden><div class="preview-card"><button id="close-preview">Close</button><article><h1 id="preview-title"></h1><div id="preview-body"></div></article></div></div>
 <script>
- import { onAuthStateChanged, signOut } from 'firebase/auth';
- import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
- import { firebaseConfigured, getFirebaseClient } from '../../lib/firebase-client.js';
-
- const qs=(s)=>document.querySelector(s);
- const id=new URLSearchParams(location.search).get('id');
- const root=qs('#editor');
- let ref=null, saveTimer=null;
- if(!firebaseConfigured||!id){location.href='/admin/login';}
+ import { supabaseConfigured,getSupabaseClient } from '../../lib/supabase-client.js';
+ const qs=s=>document.querySelector(s),id=new URLSearchParams(location.search).get('id'),root=qs('#editor');let saveTimer=null,supabase;
+ if(!supabaseConfigured||!id)location.href='/admin/login';
  else{
-  const {auth,db}=getFirebaseClient();
-  onAuthStateChanged(auth,async user=>{
-   if(!user){location.href='/admin/login';return;}
-   const profile=await getDoc(doc(db,'users',user.uid));
-   if(!profile.exists()||!['admin','editor'].includes(profile.data().role)){await signOut(auth);location.href='/admin/login';return;}
-   ref=doc(db,'posts',id);
-   const snap=await getDoc(ref);
-   if(!snap.exists()){location.href='/admin';return;}
-   const p=snap.data();
-   qs('#title').value=p.title||'';qs('#body').value=plainText(p);qs('#slug').value=p.slug||'';qs('#excerpt').value=p.excerpt||'';qs('#featured').checked=Boolean(p.featured);
-   root.hidden=false;
-  });
+  supabase=getSupabaseClient();const {data:{session}}=await supabase.auth.getSession();
+  if(!session)location.href='/admin/login';
+  else{
+   const {data:profile}=await supabase.from('profiles').select('role').eq('id',session.user.id).single();
+   if(!['admin','editor'].includes(profile?.role)){await supabase.auth.signOut();location.href='/admin/login';}
+   else{
+    const {data:p,error}=await supabase.from('posts').select('*').eq('id',id).single();
+    if(error||!p)location.href='/admin';
+    else{qs('#title').value=p.title||'';qs('#body').value=plainText(p);qs('#slug').value=p.slug||'';qs('#excerpt').value=p.excerpt||'';qs('#featured').checked=Boolean(p.featured);root.hidden=false;}
+   }
+  }
  }
- ['#title','#body','#slug','#excerpt','#featured'].forEach(selector=>qs(selector)?.addEventListener('input',scheduleSave));
+ ['#title','#body','#slug','#excerpt','#featured'].forEach(s=>qs(s)?.addEventListener('input',scheduleSave));
  qs('#settings-toggle')?.addEventListener('click',()=>qs('#settings').classList.toggle('open'));
  qs('#publish')?.addEventListener('click',async()=>{await save('published');qs('#publish').textContent='Published';});
  qs('#preview')?.addEventListener('click',()=>{qs('#preview-title').textContent=qs('#title').value||'Untitled';qs('#preview-body').innerHTML=renderHtml(qs('#body').value);qs('#preview-modal').hidden=false;});
  qs('#close-preview')?.addEventListener('click',()=>qs('#preview-modal').hidden=true);
-
  function scheduleSave(){qs('#save-state').textContent='Unsaved';clearTimeout(saveTimer);saveTimer=setTimeout(()=>save(),700);}
- async function save(status){
-  if(!ref)return;
-  qs('#save-state').textContent='Saving…';
-  const body=qs('#body').value;
-  const data={title:qs('#title').value.trim(),slug:slugify(qs('#slug').value||qs('#title').value),excerpt:qs('#excerpt').value.trim(),featured:qs('#featured').checked,content:{version:1,blocks:body.split(/\n\n+/).filter(Boolean).map(text=>({type:'paragraph',text}))},html:renderHtml(body),updatedAt:serverTimestamp()};
-  if(status==='published'){data.status='published';data.publishedAt=serverTimestamp();}
-  await updateDoc(ref,data);qs('#slug').value=data.slug;qs('#save-state').textContent='Saved';
- }
+ async function save(status){if(!supabase)return;qs('#save-state').textContent='Saving…';const body=qs('#body').value;const data={title:qs('#title').value.trim(),slug:slugify(qs('#slug').value||qs('#title').value)||('draft-'+id),excerpt:qs('#excerpt').value.trim(),featured:qs('#featured').checked,content:{version:1,blocks:body.split(/\n\n+/).filter(Boolean).map(text=>({type:'paragraph',text}))},html:renderHtml(body),updated_at:new Date().toISOString()};if(status==='published'){data.status='published';data.published_at=new Date().toISOString();}const {error}=await supabase.from('posts').update(data).eq('id',id);if(error){qs('#save-state').textContent=error.message;return;}qs('#slug').value=data.slug;qs('#save-state').textContent='Saved';}
  function plainText(p){if(p.content?.blocks?.length)return p.content.blocks.map(b=>b.text||'').join('\n\n');return String(p.html||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();}
  function slugify(v){return String(v).toLowerCase().trim().normalize('NFKD').replace(/[^\p{Letter}\p{Number}]+/gu,'-').replace(/^-|-$/g,'');}
  function renderHtml(v){return String(v).split(/\n\n+/).filter(Boolean).map(p=>'<p>'+escapeHtml(p).replace(/\n/g,'<br>')+'</p>').join('');}
