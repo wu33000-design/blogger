@@ -84,3 +84,5 @@ Do not expand the MVP into SSR merely to use Supabase. The current admin can aut
 
 
 <!-- deployment trigger: Supabase environment configured in Cloudflare -->
+
+<!-- deployment trigger: Supabase service-role build credential configured in Cloudflare -->
