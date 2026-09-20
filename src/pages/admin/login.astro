@@ -1,0 +1,45 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="Sign in — Field Notes CMS">
+<main class="login">
+  <form id="login-form" class="card">
+    <div class="mark">FIELD NOTES</div>
+    <h1>Sign in to your publication</h1>
+    <label>Email<input id="email" type="email" autocomplete="email" required></label>
+    <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
+    <button class="btn" type="submit">Sign in</button>
+    <p id="message" class="muted" role="status">Authorized editors only.</p>
+  </form>
+</main>
+<script>
+  import { signInWithEmailAndPassword } from 'firebase/auth';
+  import { doc, getDoc } from 'firebase/firestore';
+  import { firebaseConfigured, getFirebaseClient } from '../../lib/firebase-client.js';
+
+  const form=document.querySelector('#login-form');
+  const message=document.querySelector('#message');
+  if(!firebaseConfigured) message.textContent='Firebase setup is pending. Configure PUBLIC_FIREBASE_* variables first.';
+
+  form?.addEventListener('submit',async(event)=>{
+    event.preventDefault();
+    if(!firebaseConfigured) return;
+    const email=document.querySelector('#email').value;
+    const password=document.querySelector('#password').value;
+    message.textContent='Signing in…';
+    try{
+      const {auth,db}=getFirebaseClient();
+      const credential=await signInWithEmailAndPassword(auth,email,password);
+      const profile=await getDoc(doc(db,'users',credential.user.uid));
+      if(!profile.exists() || !['admin','editor'].includes(profile.data().role)){
+        await auth.signOut();
+        throw new Error('This account is not authorized for the CMS.');
+      }
+      location.href='/admin';
+    }catch(error){message.textContent=error instanceof Error?error.message:'Sign in failed.';}
+  });
+</script>
+<style>
+.login{min-height:100vh;display:grid;place-items:center;padding:24px}.card{width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:42px}.mark{font:700 11px monospace;letter-spacing:.1em;margin-bottom:46px}.card h1{font-size:27px;font-weight:550;margin:0 0 34px}.card label{display:grid;gap:8px;font-size:12px;margin:18px 0;color:#555}.card input{width:100%;border:1px solid var(--line);background:#fff;padding:12px}.card .btn{width:100%;margin-top:12px}.card p{font-size:12px;margin:18px 0 0}
+</style>
+</AdminLayout>
