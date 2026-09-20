@@ -81,3 +81,6 @@ Never expose the service-role key to browser code.
 ## Scope rule
 
 Do not expand the MVP into SSR merely to use Supabase. The current admin can authenticate in the browser while the reader site stays static. Server-side functionality is introduced only where a secret-bearing operation requires it.
+
+
+<!-- deployment trigger: Supabase environment configured in Cloudflare -->
