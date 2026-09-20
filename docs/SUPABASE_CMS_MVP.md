@@ -14,7 +14,7 @@ Use Supabase as the complete CMS backend for the first usable Field Notes MVP:
 - Existing Cloudflare static deployment.
 - Supabase Storage is available later if MVP media is needed; R2 remains an option.
 
-Reader requests must not depend on Supabase. Astro will read published rows at build time in a later step.
+Reader requests do not depend on Supabase. Astro reads published rows at build time when `SUPABASE_SERVICE_ROLE_KEY` is configured; otherwise the repository preview fixtures remain the fallback.
 
 ## MVP architecture
 
@@ -73,7 +73,7 @@ Never expose the service-role key to browser code.
 - [ ] Slug uniqueness UX.
 - [ ] Tags CRUD.
 - [ ] Structured block editor.
-- [ ] Build-time published-post adapter.
+- [x] Build-time published-post adapter.
 - [ ] Publish -> Cloudflare rebuild.
 - [ ] Media.
 - [ ] Firebase prototype files removed after Supabase live validation.
