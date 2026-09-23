@@ -20,6 +20,4 @@ async function getPublishedFromSupabase(){
 }
 export async function getPosts(){if(!hasSupabase()) return previewPosts;return getPublishedFromSupabase();}
 export async function getEnglishPosts(){return (await getPosts()).filter(p=>p.en).map(p=>({...p,title:p.en.title,excerpt:p.en.excerpt,html:p.en.html,feature_image_alt:p.en.feature_image_alt,tags:(p.tags||[]).map(t=>({...t,name:t.name_en||t.name,description:t.description_en||t.description})),primary_tag:p.primary_tag?{...p.primary_tag,name:p.primary_tag.name_en||p.primary_tag.name}:null,reading_time:readingTime(p.en.html)}));}
-export async function getTags(locale='zh'){const posts=locale==='en'?await getEnglishPosts():await getPosts();const map=new Map();for(const post of posts)for(const tag of post.tags||[]){if(!map.has(tag.slug))map.set(tag.slug,{...tag,count:0});map.get(tag.slug).count++;}return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name));}
-export async function getPostsByTag(slug,locale='zh'){const posts=locale==='en'?await getEnglishPosts():await getPosts();return posts.filter(post=>(post.tags||[]).some(tag=>tag.slug===slug));}
 export function contentSource(){return hasSupabase()?'supabase':'preview';}
