@@ -2,14 +2,14 @@
 import Layout from '../../layouts/Layout.astro'; import {getPosts} from '../../lib/posts.js';
 export async function getStaticPaths(){const posts=await getPosts();return posts.map((post,index)=>({params:{slug:post.slug},props:{post,previous:posts[index+1]||null,next:posts[index-1]||null}}))}
 const {post,previous,next}=Astro.props; const fmt=d=>new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'long',day:'numeric'}).format(new Date(d));
-const author=post.primary_author?.name || post.authors?.[0]?.name || 'Field Notes';
+const author=post.primary_author?.name || post.authors?.[0]?.name || 'BACK MOUNTAIN';
 const siteUrl=import.meta.env.SITE_URL || Astro.url.origin; const articleUrl=new URL(`/post/${post.slug}`,siteUrl).toString();
 const jsonLd={"@context":"https://schema.org","@type":"Article",headline:post.title,description:post.excerpt,datePublished:post.published_at,author:{"@type":"Person",name:author},mainEntityOfPage:articleUrl,...(post.feature_image?{image:[post.feature_image]}:{})};
 ---
-<Layout title={`${post.title} — Field Notes`} description={post.excerpt||post.title} image={post.feature_image} type="article">
+<Layout title={`${post.title} — {{site}}`} description={post.excerpt||post.title} image={post.feature_image} type="article">
 <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 <main id="content" class="shell article"><a class="back" href="/">← Index</a>
-<header><div class="meta"><span>{post.primary_tag?.name || 'Field note'}</span><time datetime={post.published_at}>{fmt(post.published_at)}</time></div><h1>{post.title}</h1><p class="lead">{post.excerpt}</p><div class="details"><span>{author}</span><span>{post.reading_time} min read</span></div></header>
+<header><div class="meta">{post.primary_tag?.name?<span>{post.primary_tag.name}</span>:<span/>}<time datetime={post.published_at}>{fmt(post.published_at)}</time></div><h1>{post.title}</h1><p class="lead">{post.excerpt}</p><div class="details"><span>{author}</span><span>{post.reading_time} min read</span></div></header>
 {post.feature_image ? <figure class="feature"><img src={post.feature_image} alt={post.feature_image_alt||""} loading="eager"/></figure> : null}
 <section class="prose body" set:html={post.html}/>
 {post.tags?.length>0&&<div class="tags">{post.tags.map(tag=><span>{tag.name}</span>)}</div>}
