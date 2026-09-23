@@ -37,11 +37,12 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
  });
  featureButton?.addEventListener('click',async()=>{
   const ids=[...selected];if(ids.length!==1)return;
-  const target=allPosts.find(p=>p.id===ids[0]);if(!target||target.featured)return;
+  const target=allPosts.find(p=>p.id===ids[0]);if(!target)return;
+  const nextFeatured=!target.featured;
   setBatchBusy(true);
-  const {error}=await supabase.from('posts').update({featured:true,updated_at:new Date().toISOString()}).eq('id',target.id);
-  if(error){alert('設定精選失敗，請稍後再試。');setBatchBusy(false);return;}
-  selected.clear();await load();setBatchBusy(false);
+  const {error}=await supabase.from('posts').update({featured:nextFeatured,updated_at:new Date().toISOString()}).eq('id',target.id);
+  if(error){alert(nextFeatured?'設定精選失敗，請稍後再試。':'取消精選失敗，請稍後再試。');setBatchBusy(false);return;}
+  await load();setBatchBusy(false);
  });
  archiveButton?.addEventListener('click',async()=>{
   const ids=[...selected];if(!ids.length)return;
@@ -69,21 +70,22 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
  function syncTagFilterUI(){if(!tagCount)return;tagCount.textContent=selectedTags.size?('('+selectedTags.size+')'):'';}
  function render(){
   const rows=visibleRows();
-  const body=rows.length?rows.map(p=>'<tr><td class="title-cell"><a href="/admin/editor?id='+encodeURIComponent(p.id)+'">'+esc(p.title||'未命名文章')+'</a>'+(p.title_en?'<span>'+esc(p.title_en)+'</span>':'')+'</td><td><span class="status '+p.status+'"><i></i>'+statusLabel(p.status)+'</span></td><td class="tag-cell">'+esc((p.tags||[]).map(t=>t.name).join('、')||'—')+'</td><td class="date-cell">'+date(p.updated_at||p.created_at)+'</td><td class="check-cell"><div class="selection-cell"><label class="check-hit"><input class="row-check" type="checkbox" value="'+p.id+'" aria-label="選取 '+esc(p.title||'未命名文章')+'" '+(selected.has(p.id)?'checked':'')+'></label><span class="selection-spacer" aria-hidden="true"></span></div></td></tr>').join(''):'<tr class="empty-row"><td colspan="5"><p class="empty-state">目前沒有文章。</p></td></tr>';
+  const body=rows.length?rows.map(p=>'<tr><td class="title-cell"><a href="/admin/editor?id='+encodeURIComponent(p.id)+'">'+(p.featured?'<b class="featured-mark" title="精選文章" aria-label="精選文章">★</b>':'')+esc(p.title||'未命名文章')+'</a>'+(p.title_en?'<span>'+esc(p.title_en)+'</span>':'')+'</td><td><span class="status '+p.status+'"><i></i>'+statusLabel(p.status)+'</span></td><td class="tag-cell">'+esc((p.tags||[]).map(t=>t.name).join('、')||'—')+'</td><td class="date-cell">'+date(p.updated_at||p.created_at)+'</td><td class="check-cell"><div class="selection-cell"><label class="check-hit"><input class="row-check" type="checkbox" value="'+p.id+'" aria-label="選取 '+esc(p.title||'未命名文章')+'" '+(selected.has(p.id)?'checked':'')+'></label><span class="selection-spacer" aria-hidden="true"></span></div></td></tr>').join(''):'<tr class="empty-row"><td colspan="5"><p class="empty-state">目前沒有文章。</p></td></tr>';
   list.querySelector('tbody').innerHTML=body;
  }
  function syncSelectionUI(){
   const visible=visibleRows().map(p=>p.id),count=selected.size,selectAll=list.querySelector('#select-all');
   if(selectAll){const checked=visible.length>0&&visible.every(id=>selected.has(id));const partial=visible.some(id=>selected.has(id))&&!checked;selectAll.checked=checked;selectAll.indeterminate=partial;}
   const selectedPost=count===1?allPosts.find(p=>p.id===[...selected][0]):null;
-  featureButton.disabled=count!==1||Boolean(selectedPost?.featured);
-  featureButton.title=count!==1?'請選取一篇文章':selectedPost?.featured?'已設為精選':'設為精選';
+  featureButton.disabled=count!==1;
+  featureButton.classList.toggle('is-featured',Boolean(selectedPost?.featured));
+  featureButton.title=count!==1?'請選取一篇文章':selectedPost?.featured?'取消精選':'設為精選';
   featureButton.setAttribute('aria-label',featureButton.title);
   archiveButton.disabled=count===0||[...selected].every(id=>allPosts.find(p=>p.id===id)?.status==='archived');
   if(deleteButton){deleteButton.disabled=count===0||userRole!=='admin';deleteButton.title=count?(`刪除選取的 ${count} 篇文章`):'刪除選取文章';}
   archiveButton.title=count?(`歸檔選取的 ${count} 篇文章`):'歸檔選取文章';
  }
- function setBatchBusy(busy){featureButton.disabled=busy;archiveButton.disabled=busy;if(deleteButton)deleteButton.disabled=busy||userRole!=='admin';document.querySelector('#new-post').disabled=busy;}
+ function setBatchBusy(busy){document.querySelector('#new-post').disabled=busy;if(busy){featureButton.disabled=true;archiveButton.disabled=true;if(deleteButton)deleteButton.disabled=true;}else syncSelectionUI();}
  function statusLabel(status){return status==='published'?'已發布':status==='archived'?'已歸檔':'草稿';}
  function date(v){return v?new Date(v).toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'}):'—';}
  function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
@@ -97,9 +99,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 .posts,.table-wrap{width:100%;min-height:374px;background:var(--admin-panel)}.table-wrap{overflow-x:auto;scrollbar-gutter:stable}
 table{width:100%;min-width:800px;border-collapse:collapse;table-layout:fixed}.col-title{width:38%}.col-status{width:12%}.col-tags{width:20%}.col-date{width:17%}.col-check{width:13%}
 th,td{text-align:left;border-bottom:1px solid var(--admin-line);padding:0 18px;vertical-align:middle;box-sizing:border-box}th{height:36px;font-size:10px;color:var(--admin-muted);font-weight:600;background:var(--admin-subtle)}td{height:62px;font-size:12px}
-.check-cell{padding-left:6px;padding-right:10px;text-align:right;vertical-align:middle}.bulk-head{height:42px}.selection-cell{width:100%;display:grid;grid-template-columns:28px 84px;align-items:center;justify-content:end;column-gap:3px}.check-hit{width:28px;height:28px;display:flex;align-items:center;justify-content:center;margin:0!important;cursor:pointer}.check-cell input{display:block;width:14px;height:14px;margin:0;accent-color:var(--admin-ink);cursor:pointer}.batch-actions{width:84px;display:flex;align-items:center;justify-content:flex-end;gap:3px}.selection-spacer{display:block;width:84px;height:1px}.batch-icon{width:26px;height:26px;border-color:transparent;background:transparent}.batch-icon:hover:not(:disabled){border-color:var(--admin-line)}
+.check-cell{padding-left:6px;padding-right:10px;text-align:right;vertical-align:middle}.bulk-head{height:42px}.selection-cell{width:100%;display:grid;grid-template-columns:28px 84px;align-items:center;justify-content:end;column-gap:3px}.check-hit{width:28px;height:28px;display:flex;align-items:center;justify-content:center;margin:0!important;cursor:pointer}.check-cell input{display:block;width:14px;height:14px;margin:0;accent-color:var(--admin-ink);cursor:pointer}.batch-actions{width:84px;display:flex;align-items:center;justify-content:flex-end;gap:3px}.selection-spacer{display:block;width:84px;height:1px}.batch-icon{width:26px;height:26px;border-color:transparent;background:transparent}.batch-icon:hover:not(:disabled){border-color:var(--admin-line)}.batch-icon.is-featured{color:var(--admin-ink);background:var(--admin-subtle)}.batch-icon.is-featured svg{fill:currentColor}
 tbody tr{cursor:default}.empty-row td{height:auto;padding:0}tbody tr:hover{background:var(--admin-subtle)}tbody tr:last-child td{border-bottom:0}
-.title-cell{min-width:0}.title-cell a{display:block;font-size:13px;font-weight:650;color:var(--admin-ink);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title-cell span{display:block;color:var(--admin-muted);font-size:10px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.title-cell{min-width:0}.title-cell a{display:block;font-size:13px;font-weight:650;color:var(--admin-ink);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.featured-mark{display:inline-block;margin-right:6px;font-size:11px;line-height:1;color:var(--admin-ink);vertical-align:1px}.title-cell span{display:block;color:var(--admin-muted);font-size:10px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tag-cell,.date-cell{color:var(--admin-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.date-cell{font-variant-numeric:tabular-nums}
 .status{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--admin-secondary);white-space:nowrap}.status i{width:6px;height:6px;border-radius:50%;background:var(--admin-muted)}.status.published{color:var(--admin-success)}.status.published i{background:var(--admin-success)}.status.archived{color:#777}.status.archived i{background:#777}
 @media(max-width:900px){.filters{height:auto;min-height:54px;flex-wrap:wrap}.filters>input{width:100%;margin-left:0}.tag-filter-menu{left:auto;right:0}}
