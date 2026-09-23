@@ -5,7 +5,7 @@ const featuredPosts=posts.filter(p=>p.featured); const featured=featuredPosts.le
 const tagMap=new Map(); for(const post of posts) for(const tag of post.tags||[]) if(tag?.slug&&!tagMap.has(tag.slug)) tagMap.set(tag.slug,tag); const filterTags=[...tagMap.values()].sort((a,b)=>a.name.localeCompare(b.name,'en'));
 const fmt=d=>new Intl.DateTimeFormat('en',{year:'numeric',month:'short',day:'numeric'}).format(new Date(d));
 ---
-<Layout title="Field Notes — English" locale="en" switchHref="/" footerText={site['site.footer']}>
+<Layout title="{{site}} — English" locale="en" switchHref="/" footerText={site['site.footer']}>
 <main id="content" class="shell">
 <section class="intro"><div><p>{site['home.eyebrow']}</p><h1>{site['home.headline']}</h1></div><p class="dek">{site['home.subjects']}<br/>{site['home.intro']}</p></section>
 {featured.length>0?<section class="featured">
@@ -13,7 +13,7 @@ const fmt=d=>new Intl.DateTimeFormat('en',{year:'numeric',month:'short',day:'num
   <div class="featured-grid">
     {initialFeatured.map(post=><a class="feature-card" href={`/en/post/${post.slug}`}>
       {post.feature_image&&<img src={post.feature_image} alt={post.feature_image_alt||""}/>}
-      <div class="feature-copy"><small>{post.primary_tag?.name||'Field note'} · {post.reading_time} min</small><h2>{post.title}</h2><p>{post.excerpt}</p><span class="read">Read note →</span></div>
+      <div class="feature-copy"><small>{[post.primary_tag?.name, `${post.reading_time} min`].filter(Boolean).join(' · ')}</small><h2>{post.title}</h2><p>{post.excerpt}</p><span class="read">Read note →</span></div>
     </a>)}
   </div>
   {extraFeatured.length>0&&<div class="featured-more">
@@ -21,7 +21,7 @@ const fmt=d=>new Intl.DateTimeFormat('en',{year:'numeric',month:'short',day:'num
     <div id="featured-extra" class="featured-grid extra" style="display:none">
       {extraFeatured.map(post=><a class="feature-card" href={`/en/post/${post.slug}`}>
         {post.feature_image&&<img src={post.feature_image} alt={post.feature_image_alt||""}/>}
-        <div class="feature-copy"><small>{post.primary_tag?.name||'Field note'} · {post.reading_time} min</small><h2>{post.title}</h2><p>{post.excerpt}</p><span class="read">Read note →</span></div>
+        <div class="feature-copy"><small>{[post.primary_tag?.name, `${post.reading_time} min`].filter(Boolean).join(' · ')}</small><h2>{post.title}</h2><p>{post.excerpt}</p><span class="read">Read note →</span></div>
       </a>)}
     </div>
   </div>}
@@ -29,7 +29,7 @@ const fmt=d=>new Intl.DateTimeFormat('en',{year:'numeric',month:'short',day:'num
 <section id="index" class="index">
   <header><span>Index</span><span id="post-count">{String(posts.length).padStart(2,'0')} notes</span></header>
   {filterTags.length>0&&<div class="tag-filters" role="group" aria-label="Filter articles by tag"><button type="button" class="tag-filter on" data-tag="" aria-pressed="true">All</button>{filterTags.map(tag=><button type="button" class="tag-filter" data-tag={tag.slug} aria-pressed="false">{tag.name}</button>)}</div>}
-  <div id="post-list">{posts.map((post,i)=><a class="row" data-post-row data-tags={(post.tags||[]).map(t=>t.slug).join(' ')} href={`/en/post/${post.slug}`}><span>{String(i+1).padStart(2,'0')}</span><div><small>{post.primary_tag?.name||'Field note'} · {post.reading_time} min</small><h2>{post.title}</h2></div><time datetime={post.published_at}>{fmt(post.published_at)}</time></a>)}</div>
+  <div id="post-list">{posts.map((post,i)=><a class="row" data-post-row data-tags={(post.tags||[]).map(t=>t.slug).join(' ')} href={`/en/post/${post.slug}`}><span>{String(i+1).padStart(2,'0')}</span><div><small>{[post.primary_tag?.name, `${post.reading_time} min`].filter(Boolean).join(' · ')}</small><h2>{post.title}</h2></div><time datetime={post.published_at}>{fmt(post.published_at)}</time></a>)}</div>
   <p id="no-posts" class="no-posts" hidden>No articles match this tag.</p>
 </section>
 <section id="about" class="about"><span>About</span><p>{site['home.about']}</p></section>
