@@ -1,8 +1,8 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
-<AdminLayout title="登入 — Field Notes CMS">
-<main class="login"><form id="login-form" class="card"><div class="mark">FIELD NOTES</div><h1>登入內容管理系統</h1><label>電子郵件<input id="email" type="email" autocomplete="email" required></label><label>密碼<input id="password" type="password" autocomplete="current-password" required></label><button class="btn" type="submit">登入</button><p id="message" class="muted" role="status">僅限授權的編輯與管理員。</p></form></main>
+<AdminLayout title="登入 — Back Mountain CMS">
+<main class="login"><form id="login-form" class="card"><div class="mark">BACK MOUNTAIN</div><h1>登入內容管理系統</h1><label>電子郵件<input id="email" type="email" autocomplete="email" required></label><label>密碼<input id="password" type="password" autocomplete="current-password" required></label><button class="btn" type="submit">登入</button><p id="message" class="muted" role="status">僅限授權的編輯與管理員。</p></form></main>
 <script>
  import { supabaseConfigured,getSupabaseClient } from '../../lib/supabase-client.js';
  const form=document.querySelector('#login-form'),message=document.querySelector('#message');
