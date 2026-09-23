@@ -1,6 +1,21 @@
 {
-  "name":"blogger","version":"0.3.0","private":true,"type":"module",
-  "scripts":{"dev":"astro dev","build":"astro build","preview":"astro preview","deploy":"npm run build && wrangler deploy"},
-  "dependencies":{"@astrojs/sitemap":"^3.6.0","@supabase/supabase-js":"^2.57.4","astro":"^6.0.0"},
-  "devDependencies":{"wrangler":"^4.0.0"}
+  "name": "blogger",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.6.0",
+    "@supabase/supabase-js": "2.116.0",
+    "astro": "^6.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "packageManager": "bun@1.2.15"
 }
