@@ -6,17 +6,17 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
  <aside class="side"><div class="cms-brand">FIELD NOTES</div><a class="view" href="/" target="_blank">查看網站 ↗</a><nav><a href="/admin">文章</a><a href="/admin/tags" class="active">標籤</a><a href="/admin/content">網站內容</a></nav><div class="side-foot"><button id="sign-out" class="btn secondary">登出</button></div></aside>
  <main class="main">
   <header class="top"><div><span class="section-kicker">內容分類</span><h1>標籤</h1><p class="muted">管理文章分類及中英文顯示名稱。</p></div><button id="new-tag" class="btn">＋ 新增標籤</button></header>
-  <p id="message" class="message muted" role="status"></p>
+  <p id="message" class="feedback" role="status"></p>
   <section class="tag-layout">
-   <div class="tag-list panel"><div class="list-head"><span>標籤</span><span>網址</span><span></span></div><div id="tags"><p class="empty muted">載入中…</p></div></div>
+   <div class="tag-list panel"><div class="list-head"><span>標籤</span><span>網址</span><span></span></div><div id="tags"><p class="empty-state">載入中…</p></div></div>
    <form id="tag-form" class="tag-form panel" hidden>
     <div class="form-head"><div><span class="section-kicker" id="form-kicker">新增</span><h2 id="form-title">新增標籤</h2></div><button id="cancel-edit" type="button" class="close" aria-label="關閉">×</button></div>
     <input id="tag-id" type="hidden">
-    <label>標籤名稱<input id="name" required></label>
-    <label>英文名稱 <small>選填</small><input id="name-en"></label>
-    <label>網址代稱<input id="slug" readonly tabindex="-1"><small>建立後固定，不隨名稱變更。</small></label>
-    <label>中文說明<textarea id="description" rows="3"></textarea></label>
-    <label>英文說明 <small>選填</small><textarea id="description-en" rows="3"></textarea></label>
+    <label class="form-label">標籤名稱<input class="form-control" id="name" required></label>
+    <label class="form-label">英文名稱 <small>選填</small><input class="form-control" id="name-en"></label>
+    <label class="form-label">網址代稱<input class="form-control" id="slug" readonly tabindex="-1"><small>建立後固定，不隨名稱變更。</small></label>
+    <label class="form-label">中文說明<textarea class="form-control" id="description" rows="3"></textarea></label>
+    <label class="form-label">英文說明 <small>選填</small><textarea class="form-control" id="description-en" rows="3"></textarea></label>
     <div class="form-actions"><button id="cancel-edit-bottom" type="button" class="btn secondary">取消</button><button class="btn" id="submit-tag">新增標籤</button></div>
    </form>
   </section>
@@ -38,7 +38,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
  function slugify(v){return String(v).toLowerCase().trim().normalize('NFKD').replace(/[^\p{Letter}\p{Number}]+/gu,'-').replace(/^-|-$/g,'');}function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 </script>
 <style>
-.message{min-height:18px;margin:-14px 0 14px;font-size:11px}.tag-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}.tag-list{overflow:hidden}.panel{background:var(--admin-panel);border:1px solid var(--admin-line);border-radius:var(--panel-radius)}.list-head,.tag-row{display:grid;grid-template-columns:minmax(180px,1fr) minmax(160px,.7fr) 110px;gap:16px;align-items:center;padding:0 16px}.list-head{height:38px;background:var(--admin-subtle);border-bottom:1px solid var(--line);font-size:10px;color:var(--admin-muted);font-weight:600}.tag-row{min-height:64px;border-bottom:1px solid #ededeb}.tag-row:last-child{border-bottom:0}.tag-name{min-width:0}.tag-name strong,.tag-name span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tag-name strong{font-size:12px}.tag-name span{font-size:11px;color:var(--admin-muted);margin-top:4px}.tag-row code{font-size:10px;color:#777;overflow:hidden;text-overflow:ellipsis}.tag-actions{display:flex;justify-content:flex-end;gap:10px}.tag-actions button,.close{border:0;background:none;color:#777;cursor:pointer;font-size:11px}.tag-actions .delete{color:var(--admin-danger)}.empty{padding:32px 16px;margin:0;text-align:center}.tag-form{padding:20px;position:sticky;top:24px}.form-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px}.form-head h2{font-size:16px;margin:0}.close{font-size:20px}.tag-form label{display:grid;gap:6px;margin-bottom:15px;font-size:11px}.tag-form label small{color:var(--admin-muted);font-weight:400}.tag-form input,.tag-form textarea{width:100%;padding:9px 10px}.tag-form input[readonly]{background:#f3f3f1;color:#777}.form-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:6px}
+.tag-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}.tag-list{overflow:hidden}.list-head,.tag-row{display:grid;grid-template-columns:minmax(180px,1fr) minmax(160px,.7fr) 110px;gap:16px;align-items:center;padding:0 16px}.list-head{height:38px;background:var(--admin-subtle);border-bottom:1px solid var(--line);font-size:10px;color:var(--admin-muted);font-weight:600}.tag-row{min-height:64px;border-bottom:1px solid #ededeb}.tag-row:last-child{border-bottom:0}.tag-name{min-width:0}.tag-name strong,.tag-name span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tag-name strong{font-size:12px}.tag-name span{font-size:11px;color:var(--admin-muted);margin-top:4px}.tag-row code{font-size:10px;color:#777;overflow:hidden;text-overflow:ellipsis}.tag-actions{display:flex;justify-content:flex-end;gap:10px}.tag-actions button,.close{border:0;background:none;color:#777;cursor:pointer;font-size:11px}.tag-actions .delete{color:var(--admin-danger)}.tag-form{padding:20px;position:sticky;top:24px}.form-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px}.form-head h2{font-size:16px;margin:0}.close{font-size:20px}.tag-form input[readonly]{background:#f3f3f1;color:#777}.form-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:6px}
 @media(max-width:980px){.tag-layout{grid-template-columns:1fr}.tag-form{position:static}.list-head,.tag-row{grid-template-columns:minmax(160px,1fr) minmax(140px,.7fr) 100px}}@media(max-width:640px){.list-head span:nth-child(2),.tag-row code{display:none}.list-head,.tag-row{grid-template-columns:1fr 100px}}
 </style>
 </AdminLayout>
