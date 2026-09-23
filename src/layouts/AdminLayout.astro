@@ -20,7 +20,7 @@ const { title = 'Field Notes CMS' } = Astro.props;
       --bg:var(--admin-bg);--panel:var(--admin-panel);--ink:var(--admin-ink);
       --muted:var(--admin-secondary);--line:var(--admin-line)
     }
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--admin-bg);color:var(--admin-ink);font-family:Inter,Arial,"Noto Sans TC",sans-serif;font-size:13px}
+    *{box-sizing:border-box}html{overflow-y:scroll;scrollbar-gutter:stable}html,body{margin:0;min-height:100%;background:var(--admin-bg);color:var(--admin-ink);font-family:Inter,Arial,"Noto Sans TC",sans-serif;font-size:13px}
     button,input,textarea,select{font:inherit}button,a,input,textarea,select{outline-color:#777}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #555;outline-offset:2px}
     .cms{min-height:100vh;display:grid;grid-template-columns:192px minmax(0,1fr)}
     .side{position:fixed;inset:0 auto 0 0;width:192px;background:#171717;color:#aaa;padding:24px 16px 18px;display:flex;flex-direction:column}
