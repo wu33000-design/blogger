@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 const defaults={
+ 'site.title':{zh:'FIELD NOTES',en:'FIELD NOTES'},
  'home.eyebrow':{zh:'田野筆記 / 001',en:'FIELD NOTES / EN'},
  'home.headline':{zh:'留下足夠的空白，讓問題自己出現。',en:'Independent notes on technology, design, research, and human agency.'},
  'home.subjects':{zh:'科技 · 設計 · 研究',en:'Technology · Design · Research'},
