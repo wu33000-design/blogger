@@ -8,7 +8,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   <header class="top"><div><span class="section-kicker">內容分類</span><h1>標籤</h1><p class="muted">管理文章分類及中英文顯示名稱。</p></div><button id="new-tag" class="btn">＋ 新增標籤</button></header>
   <p id="message" class="feedback" role="status"></p>
   <section class="tag-layout">
-   <div class="tag-list panel"><div class="list-head"><span>標籤</span><span>文章</span><span>網址</span><span></span></div><div id="tags"><p class="empty-state">載入中…</p></div></div>
+   <div class="tag-list panel"><div class="list-head"><span>標籤</span><span>文章</span><span></span></div><div id="tags"><p class="empty-state">載入中…</p></div></div>
    <aside class="tag-inspector panel">
     <div id="tag-inspector-empty" class="inspector-empty"><strong>標籤設定</strong><p>選取一個標籤進行編輯，或使用頁面右上方的「新增標籤」。</p></div>
     <form id="tag-form" class="tag-form" hidden>
@@ -16,7 +16,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
      <input id="tag-id" type="hidden">
      <label class="form-label">標籤名稱<input class="form-control" id="name" required></label>
      <label class="form-label">英文名稱 <small>選填</small><input class="form-control" id="name-en"></label>
-     <label class="form-label">網址代稱<input class="form-control" id="slug" readonly><small>建立後固定，不隨名稱變更。</small></label>
+     <label class="form-label">識別代稱<input class="form-control" id="slug" readonly><small>建立後固定，不隨名稱變更。</small></label>
      <label class="form-label">中文說明<textarea class="form-control" id="description" rows="3"></textarea></label>
      <label class="form-label">英文說明 <small>選填</small><textarea class="form-control" id="description-en" rows="3"></textarea></label>
      <div class="form-actions"><button id="cancel-edit-bottom" type="button" class="btn secondary">取消</button><button class="btn" id="submit-tag">新增標籤</button></div>
@@ -30,7 +30,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
  const cms=document.querySelector('#cms'),list=document.querySelector('#tags'),form=document.querySelector('#tag-form'),message=document.querySelector('#message'),idField=document.querySelector('#tag-id'),inspectorEmpty=document.querySelector('#tag-inspector-empty');let supabase,role,tags=[],usageCounts=new Map();
  if(!supabaseConfigured)location.href='/admin/login';else{supabase=getSupabaseClient();const {data:{session}}=await supabase.auth.getSession();if(!session)location.href='/admin/login';else{const {data:profile}=await supabase.from('profiles').select('role').eq('id',session.user.id).single();role=profile?.role;if(!['admin','editor'].includes(role)){await supabase.auth.signOut();location.href='/admin/login';}else{cms.hidden=false;await load();}}}
  async function load(){const [{data,error},{data:links,error:linkError}]=await Promise.all([supabase.from('tags').select('id,name,slug,description,name_en,description_en').order('name'),supabase.from('post_tags').select('tag_id')]);if(error){message.textContent='無法載入標籤。';return;}tags=data||[];usageCounts=new Map();if(!linkError)(links||[]).forEach(link=>usageCounts.set(link.tag_id,(usageCounts.get(link.tag_id)||0)+1));render();}
- function render(){list.innerHTML=tags.length?tags.map(t=>'<div class="tag-row" data-id="'+t.id+'"><div class="tag-name"><strong>'+esc(t.name)+'</strong>'+(t.name_en?'<span>'+esc(t.name_en)+'</span>':'')+'</div><span class="tag-count">'+(usageCounts.get(t.id)||0)+'</span><code>/topics/'+esc(t.slug)+'</code><div class="tag-actions"><button class="edit">編輯</button>'+(role==='admin'?'<button class="delete">刪除</button>':'')+'</div></div>').join(''):'<p class="empty-state">目前沒有標籤。</p>';}
+ function render(){list.innerHTML=tags.length?tags.map(t=>'<div class="tag-row" data-id="'+t.id+'"><div class="tag-name"><strong>'+esc(t.name)+'</strong>'+(t.name_en?'<span>'+esc(t.name_en)+'</span>':'')+'</div><span class="tag-count">'+(usageCounts.get(t.id)||0)+'</span><div class="tag-actions"><button class="edit">編輯</button>'+(role==='admin'?'<button class="delete">刪除</button>':'')+'</div></div>').join(''):'<p class="empty-state">目前沒有標籤。</p>';}
  function openForm(t){inspectorEmpty.hidden=true;form.hidden=false;idField.value=t?.id||'';document.querySelector('#form-title').textContent=t?'編輯標籤':'新增標籤';document.querySelector('#submit-tag').textContent=t?'儲存變更':'新增標籤';document.querySelector('#name').value=t?.name||'';document.querySelector('#name-en').value=t?.name_en||'';document.querySelector('#slug').value=t?.slug||'';document.querySelector('#description').value=t?.description||'';document.querySelector('#description-en').value=t?.description_en||'';document.querySelector('#name').focus();}
  function closeForm(){form.hidden=true;form.reset();idField.value='';inspectorEmpty.hidden=false;}
  document.querySelector('#new-tag')?.addEventListener('click',()=>openForm(null));document.querySelector('#cancel-edit')?.addEventListener('click',closeForm);document.querySelector('#cancel-edit-bottom')?.addEventListener('click',closeForm);
@@ -43,7 +43,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 <style is:global>
 .tag-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
 .tag-list{overflow:hidden}
-.list-head,.tag-row{display:grid;grid-template-columns:minmax(180px,1fr) 64px minmax(160px,.7fr) 110px;gap:16px;align-items:center;padding:0 16px}
+.list-head,.tag-row{display:grid;grid-template-columns:minmax(180px,1fr) 64px 110px;gap:16px;align-items:center;padding:0 16px}
 .list-head{height:38px;background:var(--admin-subtle);border-bottom:1px solid var(--admin-line);font-size:10px;color:var(--admin-muted);font-weight:600}
 .tag-row{min-height:62px;border-bottom:1px solid var(--admin-line)}
 .tag-row:last-child{border-bottom:0}
@@ -52,7 +52,6 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 .tag-name strong{font-size:12px;color:var(--admin-ink)}
 .tag-name span{font-size:10px;color:var(--admin-muted);margin-top:4px}
 .tag-count{font-size:11px;color:var(--admin-secondary);font-variant-numeric:tabular-nums}
-.tag-row code{font-size:10px;color:var(--admin-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tag-actions{display:flex;justify-content:flex-end;gap:4px}
 .tag-actions button,.close{border:0;border-radius:var(--control-radius);background:none;color:var(--admin-secondary);cursor:pointer;font-size:11px}
 .tag-actions button{padding:6px 7px}
@@ -70,7 +69,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 .close:hover{background:var(--admin-subtle);color:var(--admin-ink)}
 .tag-form input[readonly]{background:var(--admin-subtle);color:var(--admin-secondary)}
 .form-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:6px}
-@media(max-width:980px){.tag-layout{grid-template-columns:1fr}.tag-inspector{position:static}.list-head,.tag-row{grid-template-columns:minmax(160px,1fr) 56px minmax(140px,.7fr) 100px}}
-@media(max-width:640px){.list-head span:nth-child(3),.tag-row code{display:none}.list-head,.tag-row{grid-template-columns:minmax(0,1fr) 52px 92px;gap:8px;padding-inline:12px}}
+@media(max-width:980px){.tag-layout{grid-template-columns:1fr}.tag-inspector{position:static}.list-head,.tag-row{grid-template-columns:minmax(160px,1fr) 56px 100px}}
+@media(max-width:640px){.list-head,.tag-row{grid-template-columns:minmax(0,1fr) 52px 92px;gap:8px;padding-inline:12px}}
 </style>
 </AdminLayout>
