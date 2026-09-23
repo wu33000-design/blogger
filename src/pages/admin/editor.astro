@@ -72,7 +72,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
  function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
  function escapeAttr(v){return escapeHtml(v);}
 </script>
-<style>
+<style is:global>
 .editor{min-height:100vh;background:var(--admin-bg)}
 .bar{height:56px;position:sticky;top:0;z-index:8;background:rgba(255,255,255,.97);border-bottom:1px solid var(--admin-line);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
 .bar-left,.actions{display:flex;align-items:center;gap:8px}.bar-left a{color:var(--admin-secondary);text-decoration:none;font-size:12px}.bar-left a:hover{color:var(--admin-ink)}.post-state{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--admin-secondary);padding:3px 7px;border:1px solid var(--admin-line);border-radius:999px;background:var(--admin-subtle)}.post-state.published{color:var(--admin-success)}.post-state.archived{color:#777}
