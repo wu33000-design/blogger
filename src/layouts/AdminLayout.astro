@@ -1,6 +1,7 @@
 ---
 interface Props { title?: string; }
 const { title = 'Field Notes CMS' } = Astro.props;
+const buildId = new Date().toISOString();
 ---
 <!doctype html>
 <html lang="zh-Hant">
@@ -8,6 +9,7 @@ const { title = 'Field Notes CMS' } = Astro.props;
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width">
   <meta name="robots" content="noindex,nofollow">
+  <meta name="build-id" content={buildId}>
   <title>{title}</title>
   <style is:global>
     :root{
