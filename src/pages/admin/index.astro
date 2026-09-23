@@ -2,31 +2,86 @@
 import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
 <AdminLayout title="文章 — Field Notes CMS">
-<div class="cms" id="cms" hidden><aside class="side"><div class="cms-brand">FIELD NOTES</div><a class="view" href="/" target="_blank">查看網站 ↗</a><nav><a href="/admin" class="active">文章</a><a href="/admin/tags">標籤</a><a href="/admin/content">網站內容</a></nav><div class="side-foot"><button id="sign-out" class="btn secondary">登出</button></div></aside><main class="main"><header class="top"><div><span class="section-kicker">內容管理</span><h1>文章</h1><p class="muted">集中管理草稿與已發布文章</p></div><button id="new-post" class="btn">＋ 新增文章</button></header><section class="article-workspace"><div class="filters"><div class="segmented article-tabs" role="tablist" aria-label="文章狀態"><button data-filter="all" class="on" role="tab" aria-selected="true">全部</button><button data-filter="draft" role="tab" aria-selected="false">草稿</button><button data-filter="published" role="tab" aria-selected="false">已發布</button></div><input id="search" type="search" placeholder="搜尋中英文標題"></div><div id="posts" class="posts"><p class="empty-state">載入中…</p></div></section></main></div>
+<div class="cms" id="cms" hidden><aside class="side"><div class="cms-brand">FIELD NOTES</div><a class="view" href="/" target="_blank">查看網站 ↗</a><nav><a href="/admin" class="active">文章</a><a href="/admin/tags">標籤</a><a href="/admin/content">網站內容</a></nav><div class="side-foot"><button id="sign-out" class="btn secondary">登出</button></div></aside><main class="main"><header class="top"><div><span class="section-kicker">內容管理</span><h1>文章</h1><p class="muted">集中管理草稿、已發布與已存檔文章</p></div><div class="top-actions"><button id="archive-selected" class="icon-btn" type="button" title="存檔選取文章" aria-label="存檔選取文章" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v13H4zM3 4h18v3H3zm6 7h6"/></svg></button><button id="delete-selected" class="icon-btn danger-icon" type="button" title="刪除選取文章" aria-label="刪除選取文章" disabled hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5"/></svg></button><button id="new-post" class="btn">＋ 新增文章</button></div></header><section class="article-workspace"><div class="filters"><div class="segmented article-tabs" role="tablist" aria-label="文章狀態"><button data-filter="all" class="on" role="tab" aria-selected="true">全部</button><button data-filter="draft" role="tab" aria-selected="false">草稿</button><button data-filter="published" role="tab" aria-selected="false">已發布</button><button data-filter="archived" role="tab" aria-selected="false">已存檔</button></div><input id="search" type="search" placeholder="搜尋中英文標題"></div><div id="posts" class="posts"><p class="empty-state">載入中…</p></div></section></main></div>
 <script>
  import {supabaseConfigured,getSupabaseClient} from '../../lib/supabase-client.js';
- const cms=document.querySelector('#cms'),list=document.querySelector('#posts'),search=document.querySelector('#search');let allPosts=[],filter='all',user;
- if(!supabaseConfigured)location.href='/admin/login';else{const supabase=getSupabaseClient();const {data:{session}}=await supabase.auth.getSession();user=session?.user;if(!user)location.href='/admin/login';else{const {data:profile}=await supabase.from('profiles').select('role').eq('id',user.id).single();if(!['admin','editor'].includes(profile?.role)){await supabase.auth.signOut();location.href='/admin/login';}else{cms.hidden=false;await load();}}async function load(){const {data,error}=await supabase.from('posts').select('id,title,title_en,status,created_at,published_at,updated_at,tags(name)').order('created_at',{ascending:false});if(error){list.innerHTML='<p class="empty-state">文章載入失敗，請稍後再試。</p>';return;}allPosts=data||[];render();}document.querySelector('#sign-out')?.addEventListener('click',async()=>{await supabase.auth.signOut();location.href='/admin/login';});document.querySelector('#new-post')?.addEventListener('click',async()=>{const slug='draft-'+crypto.randomUUID();const {data,error}=await supabase.from('posts').insert({author_id:user.id,slug}).select('id').single();if(error){alert('無法建立文章，請稍後再試。');return;}location.href='/admin/editor?id='+encodeURIComponent(data.id);});}
- document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>{const active=x===b;x.classList.toggle('on',active);x.setAttribute('aria-selected',String(active));});render();}));search?.addEventListener('input',render);list?.addEventListener('click',e=>{const row=e.target.closest('tr[data-href]');if(row&&!e.target.closest('a'))location.href=row.dataset.href;});list?.addEventListener('keydown',e=>{const row=e.target.closest('tr[data-href]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();location.href=row.dataset.href;}});
- function render(){const term=(search?.value||'').toLowerCase();const rows=allPosts.filter(p=>(filter==='all'||p.status===filter)&&((p.title||'').toLowerCase().includes(term)||(p.title_en||'').toLowerCase().includes(term)));const body=rows.length?rows.map(p=>'<tr tabindex="0" role="link" data-href="/admin/editor?id='+encodeURIComponent(p.id)+'"><td class="title-cell"><a href="/admin/editor?id='+encodeURIComponent(p.id)+'">'+esc(p.title||'未命名文章')+'</a>'+(p.title_en?'<span>'+esc(p.title_en)+'</span>':'')+'</td><td><span class="status '+p.status+'"><i></i>'+(p.status==='published'?'已發布':'草稿')+'</span></td><td class="tag-cell">'+esc((p.tags||[]).map(t=>t.name).join('、')||'—')+'</td><td class="date-cell">'+date(p.updated_at||p.created_at)+'</td><td class="arrow">→</td></tr>').join(''):'<tr class="empty-row"><td colspan="5"><p class="empty-state">目前沒有文章。</p></td></tr>';const tbody=list.querySelector('tbody');if(tbody)tbody.innerHTML=body;else list.innerHTML='<div class="table-wrap"><table><colgroup><col class="col-title"><col class="col-status"><col class="col-tags"><col class="col-date"><col class="col-action"></colgroup><thead><tr><th>文章</th><th>狀態</th><th>標籤</th><th>最近更新</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>';}
- function date(v){return v?new Date(v).toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'}):'—';}function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+ const cms=document.querySelector('#cms'),list=document.querySelector('#posts'),search=document.querySelector('#search'),archiveButton=document.querySelector('#archive-selected'),deleteButton=document.querySelector('#delete-selected');
+ let allPosts=[],filter='all',user,userRole='',selected=new Set(),supabase;
+ if(!supabaseConfigured)location.href='/admin/login';else{
+  supabase=getSupabaseClient();
+  const {data:{session}}=await supabase.auth.getSession();user=session?.user;
+  if(!user)location.href='/admin/login';else{
+   const {data:profile}=await supabase.from('profiles').select('role').eq('id',user.id).single();userRole=profile?.role||'';
+   if(!['admin','editor'].includes(userRole)){await supabase.auth.signOut();location.href='/admin/login';}
+   else{cms.hidden=false;deleteButton.hidden=userRole!=='admin';await load();}
+  }
+ }
+ async function load(){
+  const {data,error}=await supabase.from('posts').select('id,title,title_en,status,created_at,published_at,updated_at,tags(name)').order('created_at',{ascending:false});
+  if(error){list.innerHTML='<p class="empty-state">文章載入失敗，請稍後再試。</p>';return;}
+  allPosts=data||[];selected=new Set([...selected].filter(id=>allPosts.some(p=>p.id===id)));render();syncSelectionUI();
+ }
+ document.querySelector('#sign-out')?.addEventListener('click',async()=>{await supabase.auth.signOut();location.href='/admin/login';});
+ document.querySelector('#new-post')?.addEventListener('click',async()=>{const slug='draft-'+crypto.randomUUID();const {data,error}=await supabase.from('posts').insert({author_id:user.id,slug}).select('id').single();if(error){alert('無法建立文章，請稍後再試。');return;}location.href='/admin/editor?id='+encodeURIComponent(data.id);});
+ document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;selected.clear();document.querySelectorAll('[data-filter]').forEach(x=>{const active=x===b;x.classList.toggle('on',active);x.setAttribute('aria-selected',String(active));});render();syncSelectionUI();}));
+ search?.addEventListener('input',()=>{render();syncSelectionUI();});
+ list?.addEventListener('click',e=>{const row=e.target.closest('tr[data-href]');if(row&&!e.target.closest('a,input,button'))location.href=row.dataset.href;});
+ list?.addEventListener('keydown',e=>{const row=e.target.closest('tr[data-href]');if(row&&(e.key==='Enter'||e.key===' ')&&!e.target.closest('input,button')){e.preventDefault();location.href=row.dataset.href;}});
+ list?.addEventListener('change',e=>{
+  if(e.target.matches('.row-check')){e.target.checked?selected.add(e.target.value):selected.delete(e.target.value);syncSelectionUI();}
+  if(e.target.matches('#select-all')){const ids=visibleRows().map(p=>p.id);if(e.target.checked)ids.forEach(id=>selected.add(id));else ids.forEach(id=>selected.delete(id));render();syncSelectionUI();}
+ });
+ archiveButton?.addEventListener('click',async()=>{
+  const ids=[...selected];if(!ids.length)return;
+  if(!confirm(`確定存檔選取的 ${ids.length} 篇文章？已發布文章會從公開網站移除。`))return;
+  setBatchBusy(true);
+  const {error}=await supabase.from('posts').update({status:'archived',updated_at:new Date().toISOString()}).in('id',ids);
+  if(error){alert('存檔失敗，請稍後再試。');setBatchBusy(false);return;}
+  selected.clear();await load();setBatchBusy(false);
+ });
+ deleteButton?.addEventListener('click',async()=>{
+  const ids=[...selected];if(!ids.length||userRole!=='admin')return;
+  if(!confirm(`確定永久刪除選取的 ${ids.length} 篇文章？此動作無法復原。`))return;
+  setBatchBusy(true);
+  const {error}=await supabase.from('posts').delete().in('id',ids);
+  if(error){alert('刪除失敗，請稍後再試。');setBatchBusy(false);return;}
+  selected.clear();await load();setBatchBusy(false);
+ });
+ function visibleRows(){const term=(search?.value||'').toLowerCase();return allPosts.filter(p=>(filter==='all'||p.status===filter)&&((p.title||'').toLowerCase().includes(term)||(p.title_en||'').toLowerCase().includes(term)));}
+ function render(){
+  const rows=visibleRows();
+  const body=rows.length?rows.map(p=>'<tr tabindex="0" role="link" data-href="/admin/editor?id='+encodeURIComponent(p.id)+'"><td class="check-cell"><input class="row-check" type="checkbox" value="'+p.id+'" aria-label="選取 '+esc(p.title||'未命名文章')+'" '+(selected.has(p.id)?'checked':'')+'></td><td class="title-cell"><a href="/admin/editor?id='+encodeURIComponent(p.id)+'">'+esc(p.title||'未命名文章')+'</a>'+(p.title_en?'<span>'+esc(p.title_en)+'</span>':'')+'</td><td><span class="status '+p.status+'"><i></i>'+statusLabel(p.status)+'</span></td><td class="tag-cell">'+esc((p.tags||[]).map(t=>t.name).join('、')||'—')+'</td><td class="date-cell">'+date(p.updated_at||p.created_at)+'</td><td class="arrow">→</td></tr>').join(''):'<tr class="empty-row"><td colspan="6"><p class="empty-state">目前沒有文章。</p></td></tr>';
+  const tbody=list.querySelector('tbody');
+  if(tbody)tbody.innerHTML=body;
+  else list.innerHTML='<div class="table-wrap"><table><colgroup><col class="col-check"><col class="col-title"><col class="col-status"><col class="col-tags"><col class="col-date"><col class="col-action"></colgroup><thead><tr><th class="check-cell"><input id="select-all" type="checkbox" aria-label="選取目前列表全部文章"></th><th>文章</th><th>狀態</th><th>標籤</th><th>最近更新</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>';
+ }
+ function syncSelectionUI(){
+  const visible=visibleRows().map(p=>p.id),count=selected.size,selectAll=list.querySelector('#select-all');
+  if(selectAll){const checked=visible.length>0&&visible.every(id=>selected.has(id));const partial=visible.some(id=>selected.has(id))&&!checked;selectAll.checked=checked;selectAll.indeterminate=partial;}
+  archiveButton.disabled=count===0||[...selected].every(id=>allPosts.find(p=>p.id===id)?.status==='archived');
+  if(deleteButton){deleteButton.disabled=count===0||userRole!=='admin';deleteButton.title=count?(`刪除選取的 ${count} 篇文章`):'刪除選取文章';}
+  archiveButton.title=count?(`存檔選取的 ${count} 篇文章`):'存檔選取文章';
+ }
+ function setBatchBusy(busy){archiveButton.disabled=busy;if(deleteButton)deleteButton.disabled=busy||userRole!=='admin';document.querySelector('#new-post').disabled=busy;}
+ function statusLabel(status){return status==='published'?'已發布':status==='archived'?'已存檔':'草稿';}
+ function date(v){return v?new Date(v).toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'}):'—';}
+ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 </script>
 <style is:global>
-.main{max-width:none}.top{margin-bottom:22px;padding-bottom:20px;border-bottom:1px solid var(--admin-line)}.top h1{margin-bottom:4px}
+.main{max-width:none}.top{margin-bottom:22px;padding-bottom:20px;border-bottom:1px solid var(--admin-line)}.top h1{margin-bottom:4px}.top-actions{display:flex;align-items:center;gap:7px}
+.icon-btn{width:34px;height:34px;display:inline-grid;place-items:center;border:1px solid var(--admin-line);border-radius:var(--control-radius);background:var(--admin-panel);color:var(--admin-secondary);cursor:pointer;padding:0}.icon-btn:hover:not(:disabled){background:var(--admin-subtle);color:var(--admin-ink)}.icon-btn:disabled{opacity:.35;cursor:not-allowed}.icon-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.danger-icon{color:var(--admin-danger)}
 .article-workspace{width:100%;background:var(--admin-panel);border:1px solid var(--admin-line);border-radius:var(--panel-radius);overflow:hidden}
 .filters{height:54px;display:flex;align-items:center;gap:12px;padding:9px 12px;border-bottom:1px solid var(--admin-line);background:var(--admin-panel)}
 .article-tabs{flex:0 0 auto}.article-tabs button{min-width:58px;text-align:center}.article-tabs button.on{background:var(--admin-panel);color:var(--admin-ink);font-weight:600}.filters input{margin-left:auto;width:260px;height:34px;padding:7px 10px;font-size:11px}
 .posts,.table-wrap{width:100%;background:var(--admin-panel)}.table-wrap{overflow-x:auto}
-table{width:100%;min-width:760px;border-collapse:collapse;table-layout:fixed}.col-title{width:46%}.col-status{width:12%}.col-tags{width:20%}.col-date{width:17%}.col-action{width:5%}
-th,td{text-align:left;border-bottom:1px solid var(--admin-line);padding:0 18px;vertical-align:middle;box-sizing:border-box}
-th{height:36px;font-size:10px;color:var(--admin-muted);font-weight:600;background:var(--admin-subtle)}
-td{height:62px;font-size:12px}
-
+table{width:100%;min-width:800px;border-collapse:collapse;table-layout:fixed}.col-check{width:4%}.col-title{width:42%}.col-status{width:12%}.col-tags{width:20%}.col-date{width:17%}.col-action{width:5%}
+th,td{text-align:left;border-bottom:1px solid var(--admin-line);padding:0 18px;vertical-align:middle;box-sizing:border-box}th{height:36px;font-size:10px;color:var(--admin-muted);font-weight:600;background:var(--admin-subtle)}td{height:62px;font-size:12px}
+.check-cell{padding-left:14px;padding-right:6px;text-align:center}.check-cell input{width:14px;height:14px;margin:0;accent-color:var(--admin-ink);cursor:pointer}
 tbody tr{cursor:pointer}.empty-row{cursor:default}.empty-row td{height:auto;padding:0}tbody tr:hover,tbody tr:focus-visible{background:var(--admin-subtle)}tbody tr:last-child td{border-bottom:0}
 .title-cell{min-width:0}.title-cell a{display:block;font-size:13px;font-weight:650;color:var(--admin-ink);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title-cell span{display:block;color:var(--admin-muted);font-size:10px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tag-cell,.date-cell{color:var(--admin-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.date-cell{font-variant-numeric:tabular-nums}
-.status{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--admin-secondary);white-space:nowrap}.status i{width:6px;height:6px;border-radius:50%;background:var(--admin-muted)}.status.published{color:var(--admin-success)}.status.published i{background:var(--admin-success)}.arrow{text-align:right;color:var(--admin-muted);font-size:14px;padding-right:16px}
-@media(max-width:900px){.col-title{width:56%}.col-status{width:17%}.col-tags{width:0}.col-date{width:21%}.col-action{width:6%}th:nth-child(3),td:nth-child(3){display:none}.filters{height:auto;min-height:54px;flex-wrap:wrap}.filters input{width:100%;margin-left:0}}
-@media(max-width:600px){.top{margin-bottom:16px}.col-title{width:70%}.col-status{width:23%}.col-date{width:0}.col-action{width:7%}th:nth-child(4),td:nth-child(4){display:none}th,td{padding-inline:12px}td{height:58px}.arrow{padding-right:10px}}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--admin-secondary);white-space:nowrap}.status i{width:6px;height:6px;border-radius:50%;background:var(--admin-muted)}.status.published{color:var(--admin-success)}.status.published i{background:var(--admin-success)}.status.archived{color:#777}.status.archived i{background:#777}.arrow{text-align:right;color:var(--admin-muted);font-size:14px;padding-right:16px}
+@media(max-width:900px){.filters{height:auto;min-height:54px;flex-wrap:wrap}.filters input{width:100%;margin-left:0}}
+@media(max-width:600px){.top{margin-bottom:16px;align-items:flex-start}.top-actions{flex-wrap:wrap;justify-content:flex-end}th,td{padding-inline:12px}td{height:58px}.check-cell{padding-inline:8px}.arrow{padding-right:10px}}
 </style>
 </AdminLayout>
