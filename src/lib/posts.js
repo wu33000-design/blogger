@@ -10,7 +10,7 @@ function normalize(row){
   const tags=(row.post_tags||[]).map(link=>link.tags).filter(Boolean);
   const author=row.profiles ? {name:row.profiles.display_name||'Field Notes'} : {name:'Field Notes'};
   return {slug:row.slug,title:row.title,excerpt:row.excerpt||'',published_at:row.published_at,updated_at:row.updated_at,feature_image:row.feature_image,feature_image_alt:row.feature_image_alt||'',html:row.html||'',featured:Boolean(row.featured),reading_time:readingTime(row.html),tags,primary_tag:tags[0]||null,authors:[author],primary_author:author,
-    en:row.title_en?.trim()?{title:row.title_en,excerpt:row.excerpt_en||'',html:row.html_en||'',feature_image_alt:row.feature_image_alt_en||row.feature_image_alt||''}:null};
+    en:row.title_en?.trim()&&row.html_en?.trim()?{title:row.title_en,excerpt:row.excerpt_en||'',html:row.html_en,feature_image_alt:row.feature_image_alt_en||row.feature_image_alt||''}:null};
 }
 async function getPublishedFromSupabase(){
  const supabase=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
