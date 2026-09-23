@@ -1,8 +1,8 @@
 ---
 import {getSiteContent} from '../lib/site-content.js';
 interface Props { title?: string; description?: string; image?: string | null; type?: string; locale?: 'zh'|'en'; switchHref?: string; footerText?: string; }
-const {title='Field Notes',description='Notes on technology, design, and research.',image=null,type='website',locale='zh',switchHref=locale==='zh'?'/en/':'/',footerText}=Astro.props;
-const siteContent=await getSiteContent(locale); const siteTitle=siteContent['site.title'] || 'FIELD NOTES'; const pageTitle=title.replace(/Field Notes/g,()=>siteTitle);
+const {title='',description='Notes on technology, design, and research.',image=null,type='website',locale='zh',switchHref=locale==='zh'?'/en/':'/',footerText}=Astro.props;
+const siteContent=await getSiteContent(locale); const siteTitle=siteContent['site.title'] || 'BACK MOUNTAIN'; const pageTitle=title?title.replace(/\{\{site\}\}/g,siteTitle):siteTitle;
 const siteUrl=import.meta.env.SITE_URL || Astro.url.origin; const canonical=new URL(Astro.url.pathname,siteUrl).toString(); const ogImage=image ? new URL(image,siteUrl).toString() : undefined;
 const ui=locale==='zh'?{index:'文章',about:'關於',switch:'EN'}:{index:'Index',about:'About',switch:'中文'};
 ---
