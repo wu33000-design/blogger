@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 const defaults={
- 'site.title':{zh:'FIELD NOTES',en:'FIELD NOTES'},
- 'home.eyebrow':{zh:'田野筆記 / 001',en:'FIELD NOTES / EN'},
+ 'site.title':{zh:'BACK MOUNTAIN',en:'BACK MOUNTAIN'},
+ 'home.eyebrow':{zh:'後山 / 001',en:'BACK MOUNTAIN / EN'},
  'home.headline':{zh:'留下足夠的空白，讓問題自己出現。',en:'Independent notes on technology, design, research, and human agency.'},
  'home.subjects':{zh:'科技 · 設計 · 研究',en:'Technology · Design · Research'},
  'home.intro':{zh:'關於系統、實踐與人類能動性的獨立筆記。',en:'Independent notes on systems, practice and human agency.'},
