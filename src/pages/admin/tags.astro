@@ -10,7 +10,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   <section class="tag-layout">
    <div class="tag-list panel"><div class="list-head"><span>標籤</span><span>文章</span><span>網址</span><span></span></div><div id="tags"><p class="empty-state">載入中…</p></div></div>
    <aside class="tag-inspector panel">
-    <div id="tag-inspector-empty" class="inspector-empty"><strong>標籤設定</strong><p>選取一個標籤進行編輯，或新增標籤。</p><button id="new-tag-inline" type="button" class="btn secondary">＋ 新增標籤</button></div>
+    <div id="tag-inspector-empty" class="inspector-empty"><strong>標籤設定</strong><p>選取一個標籤進行編輯，或使用頁面右上方的「新增標籤」。</p></div>
     <form id="tag-form" class="tag-form" hidden>
      <div class="form-head"><h2 id="form-title">新增標籤</h2><button id="cancel-edit" type="button" class="close" aria-label="關閉">×</button></div>
      <input id="tag-id" type="hidden">
@@ -33,7 +33,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
  function render(){list.innerHTML=tags.length?tags.map(t=>'<div class="tag-row" data-id="'+t.id+'"><div class="tag-name"><strong>'+esc(t.name)+'</strong>'+(t.name_en?'<span>'+esc(t.name_en)+'</span>':'')+'</div><span class="tag-count">'+(usageCounts.get(t.id)||0)+'</span><code>/topics/'+esc(t.slug)+'</code><div class="tag-actions"><button class="edit">編輯</button>'+(role==='admin'?'<button class="delete">刪除</button>':'')+'</div></div>').join(''):'<p class="empty-state">目前沒有標籤。</p>';}
  function openForm(t){inspectorEmpty.hidden=true;form.hidden=false;idField.value=t?.id||'';document.querySelector('#form-title').textContent=t?'編輯標籤':'新增標籤';document.querySelector('#submit-tag').textContent=t?'儲存變更':'新增標籤';document.querySelector('#name').value=t?.name||'';document.querySelector('#name-en').value=t?.name_en||'';document.querySelector('#slug').value=t?.slug||'';document.querySelector('#description').value=t?.description||'';document.querySelector('#description-en').value=t?.description_en||'';document.querySelector('#name').focus();}
  function closeForm(){form.hidden=true;form.reset();idField.value='';inspectorEmpty.hidden=false;}
- document.querySelector('#new-tag')?.addEventListener('click',()=>openForm(null));document.querySelector('#new-tag-inline')?.addEventListener('click',()=>openForm(null));document.querySelector('#cancel-edit')?.addEventListener('click',closeForm);document.querySelector('#cancel-edit-bottom')?.addEventListener('click',closeForm);
+ document.querySelector('#new-tag')?.addEventListener('click',()=>openForm(null));document.querySelector('#cancel-edit')?.addEventListener('click',closeForm);document.querySelector('#cancel-edit-bottom')?.addEventListener('click',closeForm);
  document.querySelector('#name')?.addEventListener('input',e=>{if(!idField.value)document.querySelector('#slug').value=slugify(e.target.value);});
  form?.addEventListener('submit',async e=>{e.preventDefault();message.textContent='正在儲存…';const id=idField.value,name=document.querySelector('#name').value.trim(),payload={name,description:document.querySelector('#description').value.trim(),name_en:document.querySelector('#name-en').value.trim()||null,description_en:document.querySelector('#description-en').value.trim()||null,updated_at:new Date().toISOString()};let error;if(id){({error}=await supabase.from('tags').update(payload).eq('id',id));}else{payload.slug=slugify(name);({error}=await supabase.from('tags').insert(payload));}if(error){message.textContent=error.code==='23505'?'儲存失敗：此網址代稱已被使用。':'儲存失敗，請檢查欄位內容。';return;}message.textContent='已儲存';closeForm();await load();});
  list?.addEventListener('click',async e=>{const row=e.target.closest('.tag-row');if(!row)return;const t=tags.find(x=>x.id===row.dataset.id);if(e.target.closest('.edit')){openForm(t);return;}if(!e.target.closest('.delete'))return;const count=usageCounts.get(t.id)||0;if(!confirm(count?('確定刪除「'+t.name+'」？此標籤將從 '+count+' 篇文章中移除。'):('確定刪除「'+t.name+'」？')))return;message.textContent='正在刪除…';const {error}=await supabase.from('tags').delete().eq('id',row.dataset.id);message.textContent=error?'刪除失敗。':'已刪除';if(!error)await load();});
@@ -61,7 +61,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 .tag-inspector{position:sticky;top:24px;min-height:260px;overflow:hidden}
 .inspector-empty{padding:20px}
 .inspector-empty strong{display:block;font-size:13px;font-weight:650}
-.inspector-empty p{margin:8px 0 18px;color:var(--admin-muted);font-size:11px;line-height:1.55}
+.inspector-empty p{margin:8px 0 0;color:var(--admin-muted);font-size:11px;line-height:1.55}
 .tag-form{padding:20px}
 .tag-form[hidden],.inspector-empty[hidden]{display:none}
 .form-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
